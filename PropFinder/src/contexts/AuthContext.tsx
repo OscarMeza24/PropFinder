@@ -54,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
+    console.log(email, password);
     setIsLoading(true);
     try {
       // Simular API call
@@ -70,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userData);
       localStorage.setItem('token', 'demo-token');
     } catch (error) {
+      console.error(error);
       throw new Error('Invalid credentials');
     } finally {
       setIsLoading(false);
@@ -93,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(newUser);
       localStorage.setItem('token', 'demo-token');
     } catch (error) {
+      console.error(error);
       throw new Error('Registration failed');
     } finally {
       setIsLoading(false);
