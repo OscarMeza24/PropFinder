@@ -36,7 +36,7 @@ class DatabaseConnection {
 // Configuration Manager Singleton
 class ConfigManager {
   private static instance: ConfigManager;
-  private config: Record<string, any> = {};
+  private config: Record<string, string> = {};
 
   private constructor() {
     this.loadConfig();
@@ -56,17 +56,17 @@ class ConfigManager {
       stripePublicKey: import.meta.env.VITE_STRIPE_PUBLIC_KEY,
       paypalClientId: import.meta.env.VITE_PAYPAL_CLIENT_ID,
       mercadoPagoPublicKey: import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY,
-      maxFileSize: 10 * 1024 * 1024, // 10MB
-      allowedImageTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      maxFileSize: '10 * 1024 * 1024', // 10MB
+      allowedImageTypes: 'image/jpeg', 'image/png',\ 'image/webp',
       mapboxApiKey: import.meta.env.VITE_MAPBOX_API_KEY,
     };
   }
 
-  public get(key: string): any {
+  public get(key: string): string {
     return this.config[key];
   }
 
-  public set(key: string, value: any): void {
+  public set(key: string, value: string): void {
     this.config[key] = value;
   }
 }
