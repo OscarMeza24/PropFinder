@@ -1,5 +1,5 @@
 # PropFinder - Portal Inmobiliario
-a
+
 ## 🏗️ Arquitectura de Software
 
 ### Modelo de Arquitectura Elegido: **Monolítico Modular**

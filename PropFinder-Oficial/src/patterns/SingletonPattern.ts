@@ -57,7 +57,7 @@ class ConfigManager {
       paypalClientId: import.meta.env.VITE_PAYPAL_CLIENT_ID,
       mercadoPagoPublicKey: import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY,
       maxFileSize: '10 * 1024 * 1024', // 10MB
-      allowedImageTypes: 'image/jpeg', 'image/png',\ 'image/webp',
+      
       mapboxApiKey: import.meta.env.VITE_MAPBOX_API_KEY,
     };
   }
