@@ -1,25 +1,59 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth-context-utils';
+import apiService from '../services/api';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [verificationNeeded, setVerificationNeeded] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setVerificationNeeded(false);
+    setResendSuccess(false);
     
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch (err) {
-      setError('Credenciales inválidas. Intenta nuevamente.');
+    } catch (error) {
+      console.log(error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      
+      if (errorMessage.includes('verifica tu correo electrónico')) {
+        setVerificationNeeded(true);
+      } else {
+        setError('Credenciales inválidas. Intenta nuevamente.');
+      }
+    }
+  };
+  
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError('Por favor, ingresa tu correo electrónico');
+      return;
+    }
+    
+    setResendingEmail(true);
+    setError('');
+    setResendSuccess(false);
+    
+    try {
+      await apiService.resendVerificationEmail(email);
+      setResendSuccess(true);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al reenviar el correo de verificación';
+      setError(errorMessage);
+    } finally {
+      setResendingEmail(false);
     }
   };
 
@@ -27,11 +61,14 @@ const Login: React.FC = () => {
     setError('');
     
     try {
-      const demoEmail = userType === 'agent' ? 'agent@propfinder.com' : 'user@propfinder.com';
-      await login(demoEmail, 'demo123');
+      // Use the test users from the database schema
+      const demoEmail = userType === 'agent' ? 'agent@example.com' : 'user1@propfinder.com';
+      // The password for test users is 'password' (hashed in the database)
+      await login(demoEmail, 'password');
       navigate('/dashboard');
-    } catch (err) {
-      setError('Error al iniciar sesión de demostración.');
+    } catch (error) {
+      console.error('Demo login error:', error);
+      setError('Error al iniciar sesión de demostración. Por favor, verifica que el servidor esté en ejecución.');
     }
   };
 
@@ -51,6 +88,26 @@ const Login: React.FC = () => {
           {error && (
             <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
               {error}
+            </div>
+          )}
+          
+          {verificationNeeded && (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded mb-4">
+              <p className="mb-2">Por favor, verifica tu correo electrónico para activar tu cuenta.</p>
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendingEmail || resendSuccess}
+                className="text-blue-600 hover:text-blue-800 underline focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resendingEmail ? 'Enviando...' : resendSuccess ? 'Correo enviado' : 'Reenviar correo de verificación'}
+              </button>
+            </div>
+          )}
+          
+          {resendSuccess && !verificationNeeded && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+              Correo de verificación enviado exitosamente. Por favor, revisa tu bandeja de entrada.
             </div>
           )}
 

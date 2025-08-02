@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Send, Phone, Video, MoreVertical, Paperclip, Smile } from 'lucide-react';
 import { useChat } from '../contexts/ChatContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth-context-utils';
 
 const Chat: React.FC = () => {
   const { user } = useAuth();
-  const { chatRooms, activeRoom, messages, sendMessage, joinRoom, leaveRoom, isConnected } = useChat();
+  const { chatRooms, activeRoom, messages, sendMessage, joinRoom, isConnected } = useChat();
   const [newMessage, setNewMessage] = useState('');
 
   const handleSendMessage = (e: React.FormEvent) => {

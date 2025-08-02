@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth-context-utils';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    role: 'user' as 'user' | 'agent'
+    confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -32,14 +31,17 @@ const Register: React.FC = () => {
     }
     
     try {
-      await register({
+      // Cast to RegisterData type with optional role
+      const registerData = {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.role
-      });
+        role: 'user' as const // Default role
+      };
+      await register(registerData);
       navigate('/dashboard');
-    } catch (err) {
+    } catch (error) {
+      console.log(error)
       setError('Error al crear la cuenta. Intenta nuevamente.');
     }
   };
@@ -108,22 +110,6 @@ const Register: React.FC = () => {
                   required
                 />
               </div>
-            </div>
-
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de cuenta
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="user">Usuario (Buscar propiedades)</option>
-                <option value="agent">Agente (Publicar propiedades)</option>
-              </select>
             </div>
 
             <div>

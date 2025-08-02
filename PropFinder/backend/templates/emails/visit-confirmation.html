@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visita Confirmada - PropFinder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 5px;
+        }
+        .visit-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #eef6ff;
+            border-radius: 5px;
+        }
+        .property-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PropFinder</h1>
+    </div>
+    
+    <div class="content">
+        <h2>Hola {{userName}},</h2>
+        
+        <p>Tu visita ha sido confirmada con éxito. A continuación, te proporcionamos los detalles:</p>
+        
+        <div class="visit-info">
+            <p><strong>Fecha:</strong> {{visitDate}}</p>
+            <p><strong>Hora:</strong> {{visitTime}}</p>
+        </div>
+        
+        <p>Detalles de la propiedad:</p>
+        
+        <div class="property-info">
+            <p><strong>Propiedad:</strong> {{propertyTitle}}</p>
+            <p><strong>Dirección:</strong> {{propertyAddress}}</p>
+            <p><strong>Agente inmobiliario:</strong> {{agentName}}</p>
+            <p><strong>Teléfono del agente:</strong> {{agentPhone}}</p>
+        </div>
+        
+        <p>Recuerda llegar puntual a tu cita. Si necesitas reprogramar o cancelar la visita, por favor hazlo con al menos 24 horas de anticipación.</p>
+        
+        <div style="text-align: center;">
+            <a href="{{dashboardUrl}}" class="button">Ver mis visitas</a>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un correo electrónico automático, por favor no respondas a este mensaje.</p>
+        <p>&copy; 2023 PropFinder. Todos los derechos reservados.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago Confirmado - PropFinder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 5px;
+        }
+        .payment-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #eef6ff;
+            border-radius: 5px;
+        }
+        .service-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PropFinder</h1>
+    </div>
+    
+    <div class="content">
+        <h2>Hola {{userName}},</h2>
+        
+        <p>Hemos recibido tu pago correctamente. A continuación, te proporcionamos los detalles de tu transacción:</p>
+        
+        <div class="payment-info">
+            <p><strong>ID de Transacción:</strong> {{transactionId}}</p>
+            <p><strong>Fecha:</strong> {{paymentDate}}</p>
+            <p><strong>Monto:</strong> {{amount}}</p>
+            <p><strong>Método de pago:</strong> {{paymentMethod}}</p>
+        </div>
+        
+        <p>Detalles del servicio:</p>
+        
+        <div class="service-info">
+            <p><strong>Servicio:</strong> {{serviceName}}</p>
+            <p><strong>Descripción:</strong> {{serviceDescription}}</p>
+            <p><strong>Periodo:</strong> {{servicePeriod}}</p>
+        </div>
+        
+        <p>Puedes ver el detalle completo de tu factura y descargarla desde tu panel de usuario.</p>
+        
+        <div style="text-align: center;">
+            <a href="{{invoiceUrl}}" class="button">Ver factura</a>
+        </div>
+        
+        <p>Gracias por confiar en PropFinder para tus necesidades inmobiliarias.</p>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un correo electrónico automático, por favor no respondas a este mensaje.</p>
+        <p>&copy; 2023 PropFinder. Todos los derechos reservados.</p>
+    </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, MessageCircle, Calendar, TrendingUp, Users, Star, Plus, Edit, Trash2 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { Home, MessageCircle, Calendar, TrendingUp, Star, Plus, Edit, Trash2 } from 'lucide-react';
+import { useAuth } from '../contexts/auth-context-utils';
 import { useProperty } from '../contexts/PropertyContext';
 import { useChat } from '../contexts/ChatContext';
 
@@ -33,7 +33,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  const userProperties = properties.filter(p => p.agent.id === user.id);
+  const userProperties = properties.filter(p => p.agent_id === user.id);
   const unreadMessages = chatRooms.reduce((sum, room) => sum + room.unreadCount, 0);
 
   const stats = [
@@ -57,7 +57,7 @@ const Dashboard: React.FC = () => {
     },
     {
       name: 'Propiedades Destacadas',
-      value: featuredProperties.filter(p => p.agent.id === user.id).length,
+      value: featuredProperties.filter(p => p.agent_id === user.id).length,
       icon: Star,
       color: 'bg-purple-500'
     }
@@ -122,7 +122,7 @@ const Dashboard: React.FC = () => {
                     />
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{property.title}</h3>
-                      <p className="text-sm text-gray-600">{property.location.city}</p>
+                      <p className="text-sm text-gray-600">{property.city}</p>
                       <p className="text-sm font-medium text-blue-600">
                         ${property.price.toLocaleString()}
                       </p>

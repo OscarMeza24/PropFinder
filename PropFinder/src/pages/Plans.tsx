@@ -1,9 +1,9 @@
 import React from 'react';
 import { Check, Star, Crown, Zap } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/auth-context-utils';
 
 const Plans: React.FC = () => {
-  const { user } = useAuth();
+  useAuth();
 
   const plans = [
     {

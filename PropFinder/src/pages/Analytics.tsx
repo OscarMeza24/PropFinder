@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { TrendingUp, Users, Eye, MessageCircle, DollarSign, MapPin, Calendar, Download } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { Eye, MessageCircle, DollarSign, MapPin, Calendar, Download } from 'lucide-react';
+import { useAuth } from '../contexts/auth-context-utils';
 
 const Analytics: React.FC = () => {
   const { user } = useAuth();

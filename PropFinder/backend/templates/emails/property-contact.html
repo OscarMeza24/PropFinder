@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Contacto - PropFinder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 5px;
+        }
+        .property-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #eef6ff;
+            border-radius: 5px;
+        }
+        .contact-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PropFinder</h1>
+    </div>
+    
+    <div class="content">
+        <h2>Hola {{agentName}},</h2>
+        
+        <p>Has recibido una nueva solicitud de contacto para la siguiente propiedad:</p>
+        
+        <div class="property-info">
+            <p><strong>Propiedad:</strong> {{propertyTitle}}</p>
+            <p><strong>Dirección:</strong> {{propertyAddress}}</p>
+        </div>
+        
+        <p>Detalles del contacto:</p>
+        
+        <div class="contact-info">
+            <p><strong>Nombre:</strong> {{contactName}}</p>
+            <p><strong>Email:</strong> {{contactEmail}}</p>
+            <p><strong>Teléfono:</strong> {{contactPhone}}</p>
+            <p><strong>Mensaje:</strong></p>
+            <p>{{message}}</p>
+        </div>
+        
+        <p>Te recomendamos responder a esta solicitud lo antes posible para no perder esta oportunidad.</p>
+        
+        <div style="text-align: center;">
+            <a href="{{dashboardUrl}}" class="button">Ir al Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un correo electrónico automático, por favor no respondas a este mensaje.</p>
+        <p>&copy; 2023 PropFinder. Todos los derechos reservados.</p>
+    </div>
+</body>
+</html>

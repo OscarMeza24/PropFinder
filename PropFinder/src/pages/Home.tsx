@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Filter, TrendingUp, Users, Star, ArrowRight } from 'lucide-react';
+import { Search, MapPin, TrendingUp, Users, Star, ArrowRight } from 'lucide-react';
 import { useProperty } from '../contexts/PropertyContext';
 
 const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-  const { featuredProperties, searchProperties } = useProperty();
+  const { featuredProperties } = useProperty();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

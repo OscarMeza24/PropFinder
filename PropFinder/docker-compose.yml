@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Frontend React Application
@@ -13,8 +13,8 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - REACT_APP_API_URL=http://localhost:5000
-      - REACT_APP_SOCKET_URL=http://localhost:5001
+      - VITE_API_URL=http://localhost:5000/api
+      - VITE_WEBSOCKET_URL=ws://localhost:5001
     depends_on:
       - backend
       - redis
@@ -37,8 +37,16 @@ services:
       - PAYPAL_CLIENT_ID=your-paypal-client-id
       - PAYPAL_CLIENT_SECRET=your-paypal-client-secret
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
       - propfinder-network
 
@@ -51,7 +59,9 @@ services:
       - "5001:5001"
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgresql://propfinder:password@postgres:5432/propfinder_db
       - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-jwt-secret-key
     depends_on:
       - redis
     networks:
@@ -66,9 +76,15 @@ services:
       - POSTGRES_DB=propfinder_db
       - POSTGRES_USER=propfinder
       - POSTGRES_PASSWORD=password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U propfinder -d propfinder_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
     networks:
       - propfinder-network
 
@@ -79,6 +95,11 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - propfinder-network
 
