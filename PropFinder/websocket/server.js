@@ -1,9 +1,11 @@
 const WebSocket = require("ws");
+const express = require("express");
 const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
 const http = require("http");
 const dotenv = require("dotenv");
 const redis = require("redis");
+const cors = require("cors");
 
 // Cargar variables de entorno
 dotenv.config();

@@ -1,287 +1,248 @@
 const express = require('express');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const paypal = require('paypal-rest-sdk');
-const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 const { pool } = require('../config/database.js');
 const { authenticateToken } = require('../middleware/auth.js');
 const asyncHandler = require('../utils/asyncHandler.js');
 const ApiError = require('../utils/ApiError.js');
+const paymentService = require('../services/payment/PaymentService.js');
 
 const router = express.Router();
 
-// Configurar PayPal
-paypal.configure({
-  mode: process.env.PAYPAL_MODE || 'sandbox',
-  client_id: process.env.PAYPAL_CLIENT_ID,
-  client_secret: process.env.PAYPAL_CLIENT_SECRET,
-});
-
-// Crear intento de pago con Stripe
-router.post('/stripe/create-payment-intent', authenticateToken, asyncHandler(async (req, res) => {
+// Ruta para crear un pago con cualquier proveedor
+router.post('/create-payment', authenticateToken, asyncHandler(async (req, res) => {
   const {
+    provider,
     amount,
-    currency = 'usd',
-    propertyId,
-    description,
-  } = req.body;
-
-  if (!amount || amount <= 0) {
-    throw new ApiError(400, 'El monto debe ser un valor positivo.');
-  }
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(amount * 100),
     currency,
-    description: description || 'Pago de PropFinder',
-    metadata: {
-      userId: req.user.userId,
-      propertyId: propertyId || '',
-    },
-  });
-
-  await pool.query(
-    `INSERT INTO payments (user_id, property_id, amount, currency, payment_method, stripe_payment_intent_id, status) 
-    VALUES ($1, $2, $3, $4, 'stripe', $5, 'pending')`,
-    [req.user.userId, propertyId, amount, currency, paymentIntent.id],
-  );
-
-  res.json({
-    clientSecret: paymentIntent.client_secret,
-    paymentIntentId: paymentIntent.id,
-  });
-}));
-
-// Confirmar pago de Stripe
-router.post('/stripe/confirm-payment', authenticateToken, asyncHandler(async (req, res) => {
-  const { paymentIntentId } = req.body;
-
-  if (!paymentIntentId) {
-    throw new ApiError(400, 'ID de Payment Intent requerido.');
-  }
-
-  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-  if (paymentIntent.status !== 'succeeded') {
-    throw new ApiError(400, `El pago no se completó. Estado: ${paymentIntent.status}`);
-  }
-
-  await pool.query(
-    "UPDATE payments SET status = 'completed', updated_at = NOW() WHERE stripe_payment_intent_id = $1",
-    [paymentIntentId],
-  );
-
-  res.json({
-    message: 'Pago confirmado exitosamente',
-    status: 'completed',
-  });
-}));
-
-// Crear pago con PayPal
-router.post('/paypal/create-payment', authenticateToken, asyncHandler(async (req, res) => {
-  const {
-    amount,
-    currency = 'USD',
-    propertyId,
     description,
+    returnUrl,
+    cancelUrl,
+    propertyId,
   } = req.body;
 
-  if (!amount || amount <= 0) {
-    throw new ApiError(400, 'El monto debe ser un valor positivo.');
+  if (!provider || !amount || amount <= 0) {
+    throw new ApiError(400, 'Proveedor y monto válido son requeridos.');
   }
 
-  const create_payment_json = {
-    intent: 'sale',
-    payer: { payment_method: 'paypal' },
-    redirect_urls: {
-      return_url: `${process.env.FRONTEND_URL}/payment/success`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
-    },
-    transactions: [{
-      item_list: {
-        items: [{
-          name: description || 'PropFinder Payment',
-          sku: propertyId || 'item',
-          price: amount.toFixed(2),
-          currency,
-          quantity: 1,
-        }],
-      },
-      amount: {
-        currency,
-        total: amount.toFixed(2),
-      },
-      description: description || 'Pago de PropFinder',
-    }],
-  };
-
-  const payment = await new Promise((resolve, reject) => {
-    paypal.payment.create(create_payment_json, (error, p) => {
-      if (error) {
-        return reject(error);
-      }
-      return resolve(p);
-    });
-  });
-
-  await pool.query(
-    `INSERT INTO payments (user_id, property_id, amount, currency, payment_method, paypal_payment_id, status)
-     VALUES ($1, $2, $3, $4, 'paypal', $5, 'pending')`,
-    [req.user.userId, propertyId, amount, currency, payment.id],
-  );
-
-  const approvalUrl = payment.links.find((link) => link.rel === 'approval_url');
-  if (!approvalUrl) {
-    throw new ApiError(500, 'No se pudo obtener la URL de aprobación de PayPal.');
-  }
-
-  res.json({ paymentId: payment.id, approvalUrl: approvalUrl.href });
-}));
-
-// Ejecutar pago de PayPal
-router.post('/paypal/execute-payment', authenticateToken, asyncHandler(async (req, res) => {
-  const { paymentId, payerId } = req.body;
-
-  if (!paymentId || !payerId) {
-    throw new ApiError(400, 'Payment ID y Payer ID son requeridos.');
-  }
-
-  const execute_payment_json = { payer_id: payerId };
-
-  const payment = await new Promise((resolve, reject) => {
-    paypal.payment.execute(paymentId, execute_payment_json, (error, p) => {
-      if (error) {
-        return reject(error);
-      }
-      return resolve(p);
-    });
-  });
-
-  if (payment.state !== 'approved') {
-    throw new ApiError(400, `El pago no fue aprobado. Estado: ${payment.state}`);
-  }
-
-  await pool.query(
-    'UPDATE payments SET status = $1, updated_at = NOW() WHERE paypal_payment_id = $2',
-    ['completed', paymentId],
-  );
-
-  res.json({
-    message: 'Pago ejecutado exitosamente',
-    status: 'completed',
-  });
-}));
-
-// Crear preferencia de pago con MercadoPago
-router.post('/mercadopago/create-preference', authenticateToken, asyncHandler(async (req, res) => {
-  const {
+  // Crear el pago utilizando el servicio de pagos
+  const paymentData = {
     amount,
-    currency = 'ARS',
-    propertyId,
+    currency: currency || (provider === 'mercadopago' ? 'ARS' : 'USD'),
     description,
-  } = req.body;
-
-  if (!amount || amount <= 0) {
-    throw new ApiError(400, 'El monto debe ser un valor positivo.');
-  }
-
-  const preference = {
-    items: [{
-      title: description || 'Pago de PropFinder',
-      unit_price: parseFloat(amount),
-      quantity: 1,
-      currency_id: currency,
-    }],
-    back_urls: {
-      success: `${process.env.FRONTEND_URL}/payment/success`,
-      failure: `${process.env.FRONTEND_URL}/payment/cancel`,
-      pending: `${process.env.FRONTEND_URL}/payment/pending`,
-    },
-    auto_return: 'approved',
-    notification_url: `${process.env.BACKEND_URL}/api/payments/mercadopago/webhook`,
-    external_reference: req.user.userId,
-    metadata: {
-      userId: req.user.userId,
-      propertyId: propertyId || '',
-    },
+    returnUrl,
+    cancelUrl,
   };
 
-  const client = new MercadoPagoConfig({
-    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
-  });
-  const preferenceClient = new Preference(client);
-  const mpResponse = await preferenceClient.create({ body: preference });
+  const metadata = {
+    propertyId,
+    userId: req.user.userId,
+    userEmail: req.user.email,
+  };
 
-  await pool.query(
-    `INSERT INTO payments (user_id, property_id, amount, currency, payment_method, mercadopago_preference_id, status)
-     VALUES ($1, $2, $3, $4, 'mercadopago', $5, 'pending')`,
-    [req.user.userId, propertyId, amount, currency, mpResponse.body.id],
+  const result = await paymentService.createPayment(provider, paymentData, metadata);
+
+  // Guardar información del pago en la base de datos
+  const paymentMethod = provider.toLowerCase();
+  const paymentId = result.id;
+
+  // Mapear campos específicos de cada proveedor
+  const paymentFields = {
+    stripe_payment_intent_id: provider === 'stripe' ? paymentId : null,
+    paypal_payment_id: provider === 'paypal' ? paymentId : null,
+    mercadopago_preference_id: provider === 'mercadopago' ? paymentId : null,
+  };
+
+  const fieldNames = [];
+  const fieldValues = [];
+  const valuePlaceholders = [];
+  let paramIndex = 1;
+
+  // Agregar campos fijos
+  fieldNames.push('user_id', 'property_id', 'amount', 'currency', 'payment_method', 'status');
+  fieldValues.push(req.user.userId, propertyId, amount, paymentData.currency, paymentMethod, 'pending');
+  valuePlaceholders.push(
+    `$${paramIndex++}`,
+    `$${paramIndex++}`,
+    `$${paramIndex++}`,
+    `$${paramIndex++}`,
+    `$${paramIndex++}`,
+    `$${paramIndex++}`,
   );
 
-  res.json({
-    preferenceId: mpResponse.body.id,
-    initPoint: mpResponse.body.init_point,
-  });
-}));
-
-// Feedback de pago de MercadoPago (redirección)
-router.get('/mercadopago/feedback', asyncHandler(async (req, res) => {
-  const { payment_id, status, preference_id } = req.query;
-
-  let paymentStatus = 'failed';
-  if (status === 'approved') {
-    paymentStatus = 'completed';
-  } else if (status === 'pending') {
-    paymentStatus = 'pending';
-  }
-
-  await pool.query(
-    'UPDATE payments SET status = $1, updated_at = NOW(), mercadopago_payment_id = $2 '
-    + 'WHERE mercadopago_preference_id = $3',
-    [paymentStatus, payment_id, preference_id],
-  );
-
-  // Redirigir al frontend con el estado del pago
-  const redirectUrl = `${process.env.FRONTEND_URL}/payment/status?status=${paymentStatus}&payment_id=${payment_id}`;
-  res.redirect(redirectUrl);
-}));
-
-// Webhook para MercadoPago
-router.post('/mercadopago/webhook', asyncHandler(async (req, res) => {
-  const { type, data } = req.body;
-
-  if (type === 'payment') {
-    const paymentId = data.id;
-    const client = new MercadoPagoConfig({
-      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
-    });
-    const paymentClient = new Payment(client);
-    const payment = await paymentClient.get({ id: paymentId });
-    const preferenceId = payment.preference_id;
-
-    if (preferenceId) {
-      let paymentStatus = 'failed';
-      if (payment.status === 'approved') {
-        paymentStatus = 'completed';
-      } else if (payment.status === 'pending') {
-        paymentStatus = 'pending';
-      }
-
-      await pool.query(
-        'UPDATE payments SET status = $1, updated_at = NOW(), mercadopago_payment_id = $2 '
-        + 'WHERE mercadopago_preference_id = $3',
-        [paymentStatus, paymentId, preferenceId],
-      );
+  // Agregar campos específicos del proveedor
+  Object.entries(paymentFields).forEach(([field, value]) => {
+    if (value !== null) {
+      fieldNames.push(field);
+      fieldValues.push(value);
+      valuePlaceholders.push(`$${paramIndex++}`);
     }
-  }
+  });
 
-  res.status(200).send('OK');
+  // Insertar en la base de datos
+  const query = `
+    INSERT INTO payments (${fieldNames.join(', ')})
+    VALUES (${valuePlaceholders.join(', ')})
+    RETURNING *
+  `;
+
+  const dbResult = await pool.query(query, fieldValues);
+  const paymentRecord = dbResult.rows[0];
+
+  // Devolver el resultado del pago junto con la información de la base de datos
+  res.json({
+    ...result,
+    paymentRecordId: paymentRecord.id,
+  });
 }));
 
-// Obtener historial de pagos del usuario
+// Ruta para confirmar un pago (para métodos que requieren confirmación en dos pasos)
+router.post('/confirm-payment', authenticateToken, asyncHandler(async (req, res) => {
+  const { provider, paymentId, additionalData = {} } = req.body;
+
+  if (!provider || !paymentId) {
+    throw new ApiError(400, 'Proveedor y ID de pago son requeridos.');
+  }
+
+  // Confirmar el pago utilizando el servicio de pagos
+  const result = await paymentService.confirmPayment(provider, paymentId, additionalData);
+
+  // Actualizar el estado del pago en la base de datos
+  const updateFields = ['status = $1', 'updated_at = NOW()'];
+  const updateValues = [result.status, paymentId];
+
+  // Agregar campos específicos del proveedor
+  let condition = '';
+  switch (provider) {
+    case 'stripe':
+      condition = 'stripe_payment_intent_id = $2';
+      break;
+    case 'paypal':
+      condition = 'paypal_payment_id = $2';
+      break;
+    case 'mercadopago':
+      condition = 'mercadopago_preference_id = $2';
+      // Actualizar también con el ID de pago real de MercadoPago si está disponible
+      if (additionalData.paymentId) {
+        updateFields.push('mercadopago_payment_id = $3');
+        updateValues.push(additionalData.paymentId);
+      }
+      break;
+    default:
+      throw new ApiError(400, 'Proveedor de pago no soportado');
+  }
+
+  const query = `
+    UPDATE payments 
+    SET ${updateFields.join(', ')}
+    WHERE ${condition}
+    RETURNING *
+  `;
+
+  await pool.query(query, updateValues);
+
+  res.json(result);
+}));
+
+// Ruta para manejar webhooks de los proveedores de pago
+router.post('/webhook/:provider', express.raw({ type: 'application/json' }), asyncHandler(async (req, res) => {
+  const { provider } = req.params;
+
+  try {
+    // Procesar el webhook utilizando el servicio de pagos
+    const result = await paymentService.handleWebhook(provider, req);
+
+    // Si el webhook incluye información de pago, actualizar la base de datos
+    if (result.paymentId) {
+      const { paymentId, status } = result;
+      let condition = '';
+      const queryParams = [status, paymentId];
+
+      switch (provider) {
+        case 'stripe':
+          condition = 'stripe_payment_intent_id = $2';
+          break;
+        case 'paypal':
+          condition = 'paypal_payment_id = $2';
+          break;
+        case 'mercadopago':
+          condition = 'mercadopago_preference_id = $2 OR mercadopago_payment_id = $2';
+          break;
+        default:
+          throw new Error('Proveedor no soportado');
+      }
+
+      const query = `
+        UPDATE payments 
+        SET status = $1, updated_at = NOW() 
+        WHERE ${condition}
+      `;
+
+      await pool.query(query, queryParams);
+    }
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error(`Error en webhook de ${provider}:`, error);
+    res.status(400).json({ error: error.message });
+  }
+}));
+
+// Ruta para obtener el estado de un pago
+router.get('/status/:provider/:paymentId', authenticateToken, asyncHandler(async (req, res) => {
+  const { provider, paymentId } = req.params;
+
+  // Obtener el estado del pago utilizando el servicio de pagos
+  const status = await paymentService.getPaymentStatus(provider, paymentId);
+
+  // Obtener información adicional de la base de datos
+  let condition = '';
+  switch (provider) {
+    case 'stripe':
+      condition = 'stripe_payment_intent_id = $1';
+      break;
+    case 'paypal':
+      condition = 'paypal_payment_id = $1';
+      break;
+    case 'mercadopago':
+      condition = 'mercadopago_preference_id = $1 OR mercadopago_payment_id = $1';
+      break;
+    default:
+      throw new ApiError(400, 'Proveedor de pago no soportado');
+  }
+
+  const query = `
+    SELECT * FROM payments 
+    WHERE ${condition}
+    AND user_id = $2
+  `;
+
+  const dbResult = await pool.query(query, [paymentId, req.user.userId]);
+
+  if (dbResult.rows.length === 0) {
+    throw new ApiError(404, 'Pago no encontrado');
+  }
+
+  const paymentRecord = dbResult.rows[0];
+
+  res.json({
+    ...status,
+    paymentRecord,
+  });
+}));
+
+// Ruta para obtener el historial de pagos del usuario
 router.get('/history', authenticateToken, asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const offset = (page - 1) * limit;
 
+  // Validar parámetros
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+
+  if (Number.isNaN(pageNum) || pageNum < 1 || Number.isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+    throw new ApiError(400, 'Parámetros de paginación inválidos');
+  }
+
+  // Obtener pagos del usuario con paginación
   const paymentsQuery = pool.query(
     `SELECT p.*, pr.title as property_title
      FROM payments p
@@ -289,55 +250,33 @@ router.get('/history', authenticateToken, asyncHandler(async (req, res) => {
      WHERE p.user_id = $1
      ORDER BY p.created_at DESC
      LIMIT $2 OFFSET $3`,
-    [req.user.userId, limit, offset],
+    [req.user.userId, limitNum, offset],
   );
 
+  // Obtener el total de pagos para la paginación
   const totalQuery = pool.query(
     'SELECT COUNT(*) as total FROM payments WHERE user_id = $1',
     [req.user.userId],
   );
 
   const [paymentsResult, totalResult] = await Promise.all([paymentsQuery, totalQuery]);
-
   const total = parseInt(totalResult.rows[0].total, 10);
 
   res.json({
     payments: paymentsResult.rows,
     pagination: {
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
+      page: pageNum,
+      limit: limitNum,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limitNum),
     },
   });
 }));
 
-// Webhook para Stripe (para manejar eventos de pago)
-router.post('/stripe/webhook', express.raw({ type: 'application/json' }), asyncHandler(async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    console.error('Webhook signature verification failed.', err.message);
-    throw new ApiError(400, `Webhook Error: ${err.message}`);
-  }
-
-  const session = event.data.object;
-  const eventType = event.type;
-
-  console.log({ eventType, session });
-
-  if (eventType === 'payment_intent.succeeded' || eventType === 'payment_intent.payment_failed') {
-    const status = eventType === 'payment_intent.succeeded' ? 'completed' : 'failed';
-    await pool.query(
-      'UPDATE payments SET status = $1, updated_at = NOW() WHERE stripe_payment_intent_id = $2',
-      [status, session.id],
-    );
-  }
-
-  res.json({ received: true });
-}));
+// Ruta para obtener los proveedores de pago disponibles
+router.get('/providers', (req, res) => {
+  const providers = paymentService.getAvailableProviders();
+  res.json({ providers });
+});
 
 module.exports = router;
