@@ -220,7 +220,8 @@ class ApiService {
   }
 
   async getProfile(): Promise<{ user: User }> {
-    return this.request<{ user: User }>("/auth/profile");
+    const userData = await this.request<User>("/auth/profile");
+    return { user: userData };
   }
 
   async updateProfile(data: {
@@ -259,7 +260,28 @@ class ApiService {
     const queryString = searchParams.toString();
     const endpoint = `/properties${queryString ? `?${queryString}` : ""}`;
 
-    return this.request<PropertiesResponse>(endpoint);
+    // Usar fetch directo sin autenticación ya que este endpoint es público
+    const url = `${API_URL}${endpoint}`;
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("API request failed:", error);
+      throw error;
+    }
   }
 
   async getProperty(id: number): Promise<{ property: Property }> {
@@ -331,7 +353,53 @@ class ApiService {
     return this.request<PropertiesResponse>(endpoint);
   }
 
-  // Métodos de pagos
+  // Métodos de pagos unificados
+  async getPaymentProviders(): Promise<{ providers: string[] }> {
+    return this.request<{ providers: string[] }>("/payments/providers");
+  }
+
+  async createPayment(data: {
+    provider: "stripe" | "paypal";
+    amount: number;
+    currency?: string;
+    description?: string;
+    returnUrl?: string;
+    cancelUrl?: string;
+    propertyId?: number;
+  }): Promise<{
+    id: string;
+    clientSecret?: string;
+    status: string;
+    paymentMethod: string;
+    approvalUrl?: string;
+    requiresApproval?: boolean;
+    requiresAction?: boolean;
+    requiresConfirmation?: boolean;
+    additionalData?: Record<string, unknown>;
+    paymentRecordId: number;
+  }> {
+    return this.request("/payments/create-payment", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async confirmPayment(data: {
+    provider: "stripe" | "paypal";
+    paymentId: string;
+    additionalData?: Record<string, unknown>;
+  }): Promise<{
+    success: boolean;
+    status: string;
+    error?: string;
+  }> {
+    return this.request("/payments/confirm-payment", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Métodos de pagos (mantener para compatibilidad)
   async createStripePaymentIntent(data: {
     amount: number;
     currency?: string;
@@ -413,8 +481,16 @@ class ApiService {
   }
 
   // Métodos de chat
-  async getConversations(): Promise<{ conversations: Conversation[] }> {
-    return this.request<{ conversations: Conversation[] }>("/conversations");
+  async getConversations(): Promise<{
+    conversations?: Conversation[];
+    data?: Conversation[];
+    success?: boolean;
+  }> {
+    return this.request<{
+      conversations?: Conversation[];
+      data?: Conversation[];
+      success?: boolean;
+    }>("/conversations");
   }
 
   async getConversationMessages(

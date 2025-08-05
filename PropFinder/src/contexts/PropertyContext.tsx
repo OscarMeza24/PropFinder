@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import apiService, {
   Property as ApiProperty,
   PropertiesResponse,
 } from "../services/api";
-import {
-  Property,
-  PropertyContext,
-} from "./property-context-utils";
+import { Property, PropertyContext } from "./property-context-utils";
 
 // Función para convertir Property del API a Property del frontend
 const convertApiPropertyToProperty = (apiProperty: ApiProperty): Property => {
   return {
     id: apiProperty.id.toString(),
     title: apiProperty.title,
-    price: apiProperty.price,
+    price: typeof apiProperty.price === 'string' ? parseFloat(apiProperty.price) : apiProperty.price,
     type: apiProperty.property_type as
       | "apartment"
       | "house"
@@ -49,7 +46,7 @@ const convertApiPropertyToProperty = (apiProperty: ApiProperty): Property => {
 export const useProperty = () => {
   const context = React.useContext(PropertyContext);
   if (!context) {
-    throw new Error('useProperty must be used within a PropertyProvider');
+    throw new Error("useProperty must be used within a PropertyProvider");
   }
   return context;
 };
@@ -87,12 +84,22 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsLoading(true);
     setError(null);
     try {
+      console.log("PropertyContext: Cargando propiedades...", {
+        params,
+        isAuthenticated: apiService.isAuthenticated(),
+        hasToken: !!apiService.getToken(),
+      });
+
       const response: PropertiesResponse = await apiService.getProperties(
         params
       );
+      console.log('PropertyContext: Respuesta del API:', response);
+      
       const convertedProperties = response.properties.map(
         convertApiPropertyToProperty
       );
+      console.log('PropertyContext: Propiedades convertidas:', convertedProperties);
+      
       setProperties(convertedProperties);
       setPagination(response.pagination);
     } catch (error) {
@@ -262,7 +269,11 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({
         id: tempId,
         title: propertyData.title,
         price: propertyData.price,
-        type: propertyData.property_type as 'apartment' | 'house' | 'condo' | 'townhouse',
+        type: propertyData.property_type as
+          | "apartment"
+          | "house"
+          | "condo"
+          | "townhouse",
         bedrooms: propertyData.bedrooms || 0,
         bathrooms: propertyData.bathrooms || 0,
         area: propertyData.square_feet || 0,
@@ -270,26 +281,26 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({
           address: propertyData.address,
           city: propertyData.city,
           state: propertyData.state,
-          zipCode: propertyData.zip_code || '',
+          zipCode: propertyData.zip_code || "",
         },
         images: propertyData.images || [],
-        description: propertyData.description || '',
+        description: propertyData.description || "",
         amenities: propertyData.features || [],
         agent: {
-          id: 'temp-agent',
-          name: 'Current User',
-          email: '',
-          phone: '',
+          id: "temp-agent",
+          name: "Current User",
+          email: "",
+          phone: "",
         },
         featured: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      
-      setProperties(prev => [newProperty, ...prev]);
+
+      setProperties((prev) => [newProperty, ...prev]);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to create property';
+        err instanceof Error ? err.message : "Failed to create property";
       setError(errorMessage);
       throw err;
     } finally {

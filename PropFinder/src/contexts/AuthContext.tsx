@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import apiService from '../services/api';
-import { AuthContext } from './auth-context-utils';
-import type { User } from '../services/api';
+import React, { useEffect, useState } from "react";
+import type { User } from "../services/api";
+import apiService from "../services/api";
+import { AuthContext } from "./auth-context-utils";
 
 interface RegisterData {
   email: string;
   password: string;
   name: string;
-  role?: 'user' | 'agent'; // Made role optional
   phone?: string;
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(user);
         }
       } catch (error) {
-        console.error('Error checking auth:', error);
+        console.error("Error checking auth:", error);
         apiService.removeToken();
       } finally {
         setIsLoading(false);
@@ -42,7 +43,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await apiService.login({ email, password });
       setUser(response.user);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesión';
+      const errorMessage =
+        error instanceof Error ? error.message : "Error al iniciar sesión";
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -54,14 +56,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     setError(null);
     try {
-      // Remove role from userData as it's not expected by the backend
-      // Using void to explicitly ignore the role property
-      const { role, ...userDataWithoutRole } = userData;
-      void role; // Explicitly mark as intentionally unused
-      const response = await apiService.register(userDataWithoutRole);
+      // Use only the required fields for registration
+      const registrationData = {
+        email: userData.email,
+        password: userData.password,
+        name: userData.name,
+        ...(userData.phone && { phone: userData.phone }),
+      };
+
+      const response = await apiService.register(registrationData);
       setUser(response.user);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error al registrarse';
+      const errorMessage =
+        error instanceof Error ? error.message : "Error al registrarse";
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -74,7 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await apiService.updateProfile(data);
       setUser(response.user);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar perfil';
+      const errorMessage =
+        error instanceof Error ? error.message : "Error al actualizar perfil";
       setError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -93,14 +101,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     updateProfile,
     isLoading,
-    error
+    error,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export default AuthProvider;

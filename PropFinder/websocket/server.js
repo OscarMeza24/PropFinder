@@ -8,7 +8,7 @@ const redis = require("redis");
 const cors = require("cors");
 
 // Cargar variables de entorno
-dotenv.config();
+dotenv.config({ path: "../backend/.env" });
 
 // Configurar PostgreSQL
 const pool = new Pool({
@@ -19,40 +19,63 @@ const pool = new Pool({
       : false,
 });
 
-// Configurar Redis
-const redisClient = redis.createClient({
-  url: process.env.REDIS_URL || "redis://localhost:6379",
-});
+// Verificar conexión a la base de datos
+pool
+  .connect()
+  .then(() => console.log("✅ WebSocket conectado a Supabase PostgreSQL"))
+  .catch((err) =>
+    console.error("❌ Error conectando WebSocket a la base de datos:", err)
+  );
 
-redisClient.on("error", (err) => console.log("Redis Error: ", err));
+// Configurar Redis (opcional en desarrollo)
+let redisClient = null;
+let redisSubscriber = null;
 
-// Conectar a Redis
-redisClient.connect().catch(console.error);
-
-// Suscribirse al canal de notificaciones
-const redisSubscriber = redisClient.duplicate();
-redisSubscriber.connect().catch(console.error);
-
-redisSubscriber.subscribe("notifications", (message) => {
+if (process.env.NODE_ENV === "production" || process.env.USE_REDIS === "true") {
   try {
-    const data = JSON.parse(message);
-    const { userId, notification } = data;
+    redisClient = redis.createClient({
+      url: process.env.REDIS_URL || "redis://localhost:6379",
+    });
 
-    // Enviar notificación al usuario si está conectado
-    const client = clients.get(userId);
-    if (client && client.readyState === WebSocket.OPEN) {
-      client.send(
-        JSON.stringify({
-          type: "notification",
-          notification,
-        })
-      );
-      console.log(`Notificación enviada al usuario ${userId}`);
-    }
+    redisClient.on("error", (err) => console.log("Redis Error: ", err));
+
+    // Conectar a Redis
+    redisClient.connect().catch(console.error);
+
+    // Suscribirse al canal de notificaciones
+    redisSubscriber = redisClient.duplicate();
+    redisSubscriber.connect().catch(console.error);
+
+    redisSubscriber.subscribe("notifications", (message) => {
+      try {
+        const data = JSON.parse(message);
+        const { userId, notification } = data;
+
+        // Enviar notificación al usuario si está conectado
+        const client = clients.get(userId);
+        if (client && client.readyState === WebSocket.OPEN) {
+          client.send(
+            JSON.stringify({
+              type: "notification",
+              notification,
+            })
+          );
+          console.log(`Notificación enviada al usuario ${userId}`);
+        }
+      } catch (error) {
+        console.error("Error al procesar notificación de Redis:", error);
+      }
+    });
+
+    console.log("✅ Redis configurado y conectado");
   } catch (error) {
-    console.error("Error al procesar notificación de Redis:", error);
+    console.log("ℹ️  Redis no disponible, funcionando en modo local");
   }
-});
+} else {
+  console.log(
+    "ℹ️  Redis está deshabilitado (NODE_ENV no es producción y USE_REDIS no está establecido)"
+  );
+}
 
 // Crear servidor HTTP
 const server = http.createServer();
@@ -336,7 +359,23 @@ wss.on("connection", async (ws, req) => {
 
 // Endpoint para obtener conversaciones del usuario
 
-const { authenticateToken } = require("../backend/middleware/auth");
+// Crear middleware de autenticación local
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "Token de acceso requerido" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: "Token inválido o expirado" });
+    }
+    req.user = user;
+    next();
+  });
+};
 
 const app = express();
 app.use(

@@ -27,7 +27,7 @@ const Properties: React.FC = () => {
 
     // Apply filters
     if (filters.type) {
-      filtered = filtered.filter(property => property.property_type === filters.type);
+      filtered = filtered.filter(property => property.type === filters.type);
     }
 
     if (filters.minPrice) {
@@ -48,8 +48,8 @@ const Properties: React.FC = () => {
 
     if (filters.location) {
       filtered = filtered.filter(property => 
-        property.city.toLowerCase().includes(filters.location.toLowerCase()) ||
-        property.address.toLowerCase().includes(filters.location.toLowerCase())
+        property.location.city.toLowerCase().includes(filters.location.toLowerCase()) ||
+        property.location.address.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
@@ -249,7 +249,7 @@ const Properties: React.FC = () => {
               <div key={property.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative">
                   <img
-                    src={property.images[0]}
+                    src={property.images[0] || '/placeholder-property.jpg'}
                     alt={property.title}
                     className="w-full h-48 object-cover"
                   />
@@ -267,7 +267,7 @@ const Properties: React.FC = () => {
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{property.title}</h3>
                   <div className="flex items-center text-gray-600 mb-3">
                     <MapPin className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{property.address}, {property.city}</span>
+                    <span className="text-sm">{property.location.address}, {property.location.city}</span>
                   </div>
 
                   <div className="flex items-center justify-between mb-4">
@@ -275,7 +275,7 @@ const Properties: React.FC = () => {
                       ${property.price.toLocaleString()}
                     </span>
                     <span className="text-sm text-gray-500 capitalize">
-                      {property.property_type}
+                      {property.type}
                     </span>
                   </div>
 
@@ -290,18 +290,18 @@ const Properties: React.FC = () => {
                     </div>
                     <div className="flex items-center">
                       <Square className="h-4 w-4 mr-1" />
-                      <span>{property.square_feet} m²</span>
+                      <span>{property.area} m²</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <img
-                        src={property.agent_avatar}
-                        alt={property.agent_name}
+                        src={property.agent.avatar || '/default-avatar.jpg'}
+                        alt={property.agent.name}
                         className="w-8 h-8 rounded-full object-cover"
                       />
-                      <span className="text-sm text-gray-600">{property.agent_name}</span>
+                      <span className="text-sm text-gray-600">{property.agent.name}</span>
                     </div>
                     <Link
                       to={`/properties/${property.id}`}

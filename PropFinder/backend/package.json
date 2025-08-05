@@ -10,7 +10,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "db:test": "node test-db.js",
+    "db:migrate": "node database/migrate.js",
+    "setup": "npm install && node test-db.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
