@@ -107,7 +107,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!user) return;
 
     const token = apiService.getToken();
-    if (!token) return;
+    if (!token) {
+      console.log("No token available for WebSocket connection");
+      return;
+    }
+
+    // Verificar si el token está expirado antes de intentar conectar
+    if (apiService.isTokenExpired()) {
+      console.log("Token expirado, no se puede conectar WebSocket");
+      setError("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+      return;
+    }
 
     try {
       const ws = apiService.createWebSocketConnection(token);
@@ -116,6 +126,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       ws.onopen = () => {
         console.log("WebSocket connected");
         setIsConnected(true);
+        setError(null);
       };
 
       ws.onmessage = (event) => {
@@ -127,11 +138,21 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       };
 
-      ws.onclose = () => {
-        console.log("WebSocket disconnected");
+      ws.onclose = (event) => {
+        console.log("WebSocket disconnected", event.code, event.reason);
         setIsConnected(false);
+        
+        // Si el código es 4001, es un token expirado, no reconectarse inmediatamente
+        if (event.code === 4001) {
+          console.log("Token expirado, esperando nuevo login");
+          setError("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+          return;
+        }
+        
+        // Para otros casos, intentar reconectar después de un retraso
         setTimeout(() => {
-          if (user && apiService.isAuthenticated()) {
+          if (user && apiService.isAuthenticated() && !apiService.isTokenExpired()) {
+            console.log("Intentando reconectar WebSocket...");
             connectWebSocket();
           }
         }, 5000);
@@ -334,6 +355,26 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [joinRoom, loadConversations]
   );
+
+  // Disconnect WebSocket when user logs out
+  useEffect(() => {
+    if (!user && wsRef.current) {
+      console.log("User logged out, disconnecting WebSocket");
+      wsRef.current.close();
+      wsRef.current = null;
+      setIsConnected(false);
+      setChatRooms([]);
+      setActiveRoom(null);
+      setMessages([]);
+    }
+  }, [user]);
+
+  // Effect to handle WebSocket connection when user logs in
+  useEffect(() => {
+    if (user && !wsRef.current) {
+      connectWebSocket();
+    }
+  }, [user, connectWebSocket]);
 
   const contextValue = useMemo(
     () => ({

@@ -214,7 +214,7 @@ const Navbar: React.FC = () => {
                       className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
                     >
                       <Link
-                        to="/dashboard"
+                        to={user?.role === 'agent' ? '/agent/dashboard' : '/dashboard'}
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setIsProfileMenuOpen(false)}
                       >
@@ -344,7 +344,7 @@ const Navbar: React.FC = () => {
                   )}
                 </div>
                 <Link
-                  to="/dashboard"
+                  to={user?.role === 'agent' ? '/agent/dashboard' : '/dashboard'}
                   className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50"
                   onClick={() => setIsMenuOpen(false)}
                 >

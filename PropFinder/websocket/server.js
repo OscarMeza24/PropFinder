@@ -91,12 +91,21 @@ const rooms = new Map(); // roomId -> Set of userIds
 const authenticateConnection = (url) => {
   try {
     const token = new URL(url, "ws://localhost").searchParams.get("token");
-    if (!token) return null;
+    if (!token) {
+      console.log("No se proporcionó token en la conexión WebSocket");
+      return null;
+    }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return decoded;
   } catch (error) {
-    console.error("Error de autenticación WebSocket:", error);
+    if (error.name === 'TokenExpiredError') {
+      console.log("Token expirado en conexión WebSocket:", error.expiredAt);
+    } else if (error.name === 'JsonWebTokenError') {
+      console.log("Token inválido en conexión WebSocket:", error.message);
+    } else {
+      console.error("Error de autenticación WebSocket:", error);
+    }
     return null;
   }
 };
@@ -179,12 +188,23 @@ wss.on("connection", async (ws, req) => {
   // Autenticar usuario
   const user = authenticateConnection(req.url);
   if (!user) {
-    ws.close(1008, "Token inválido");
+    console.log("Conexión WebSocket rechazada por autenticación fallida");
+    // Enviar código de error específico para token expirado
+    ws.close(4001, "Token expirado o inválido");
     return;
   }
 
   const userId = user.userId;
   console.log(`Usuario autenticado: ${userId}`);
+
+  // Registrar cliente
+  clients.set(userId, ws);
+
+  // Enviar confirmación de conexión
+  ws.send(JSON.stringify({
+    type: "connection_established",
+    userId: userId
+  }));
 
   // Manejar mensajes
   ws.on("message", async (data) => {

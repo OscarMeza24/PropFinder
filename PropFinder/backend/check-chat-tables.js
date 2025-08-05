@@ -1,5 +1,5 @@
-require("dotenv").config();
-const { Pool } = require("pg");
+require('dotenv').config();
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -8,7 +8,7 @@ const pool = new Pool({
 
 async function checkTables() {
   try {
-    console.log("🔍 Verificando tablas de chat...");
+    console.log('🔍 Verificando tablas de chat...');
 
     // Verificar tabla conversations
     const conversations = await pool.query(`
@@ -18,7 +18,7 @@ async function checkTables() {
       ORDER BY table_name, ordinal_position
     `);
 
-    console.log("📋 Tablas de chat disponibles:");
+    console.log('📋 Tablas de chat disponibles:');
     console.table(conversations.rows);
 
     // Verificar si existen las tablas, si no, crearlas
@@ -46,12 +46,12 @@ async function checkTables() {
     await pool.query(createConversations);
     await pool.query(createMessages);
 
-    console.log("✅ Tablas de chat verificadas/creadas");
+    console.log('✅ Tablas de chat verificadas/creadas');
 
     await pool.end();
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error:", error.message);
+    console.error('❌ Error:', error.message);
     await pool.end();
     process.exit(1);
   }

@@ -1,14 +1,17 @@
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { Eye, EyeOff, User, Building } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/auth-context-utils";
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    phone: "",
+    role: "user" as "user" | "agent",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -25,41 +28,37 @@ const Register: React.FC = () => {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres");
+    if (formData.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      setError(
-        "La contraseña debe contener al menos: una mayúscula, una minúscula y un número"
-      );
+    if (formData.role === "agent" && !formData.phone) {
+      setError("El teléfono es requerido para agentes");
       return;
     }
 
     try {
-      // Send only the required data for registration
+      // Send the required data for registration including role
       const registerData = {
-        name: formData.name,
+        name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password,
+        phone: formData.phone,
+        role: formData.role,
       };
       await register(registerData);
-      navigate("/dashboard");
+      
+      // Redirect based on role
+      if (formData.role === "agent") {
+        navigate("/agent/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       console.log(error);
       setError("Error al crear la cuenta. Intenta nuevamente.");
     }
-  };
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   return (
@@ -71,7 +70,7 @@ const Register: React.FC = () => {
               Crear Cuenta
             </h1>
             <p className="text-gray-600">
-              Únete a PropFinder y encuentra tu hogar ideal
+              Únete a PropFinder como {formData.role === 'agent' ? 'agente inmobiliario' : 'comprador/inquilino'}
             </p>
           </div>
 
@@ -82,73 +81,121 @@ const Register: React.FC = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Selector de tipo de cuenta */}
             <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Nombre completo
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Tipo de cuenta
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, role: 'user' }))}
+                  className={`p-4 border-2 rounded-lg text-center transition-all ${
+                    formData.role === 'user'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <User className="h-8 w-8 mx-auto mb-2" />
+                  <div className="font-medium">Usuario</div>
+                  <div className="text-sm text-gray-500">Buscar propiedades</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, role: 'agent' }))}
+                  className={`p-4 border-2 rounded-lg text-center transition-all ${
+                    formData.role === 'agent'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <Building className="h-8 w-8 mx-auto mb-2" />
+                  <div className="font-medium">Agente</div>
+                  <div className="text-sm text-gray-500">Vender propiedades</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Campos de nombre */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre *
+                </label>
                 <input
-                  id="name"
-                  name="name"
                   type="text"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Tu nombre completo"
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Apellido *
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
             </div>
 
+            {/* Email */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Email
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Correo Electrónico *
               </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="tu@email.com"
-                  required
-                />
-              </div>
+              <input
+                type="email"
+                id="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
             </div>
 
+            {/* Teléfono */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Contraseña
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                Teléfono {formData.role === 'agent' ? '*' : '(opcional)'}
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required={formData.role === 'agent'}
+                placeholder="+1234567890"
+              />
+            </div>
+
+            {/* Contraseña */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Contraseña *
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
-                  id="password"
-                  name="password"
                   type={showPassword ? "text" : "password"}
+                  id="password"
                   value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-2 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -157,35 +204,27 @@ const Register: React.FC = () => {
                   )}
                 </button>
               </div>
-              <p className="mt-2 text-xs text-gray-500">
-                Mínimo 8 caracteres, incluyendo una mayúscula, una minúscula y
-                un número
-              </p>
             </div>
 
+            {/* Confirmar contraseña */}
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Confirmar contraseña
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                Confirmar Contraseña *
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
-                  id="confirmPassword"
-                  name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
                   value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
+                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-2 text-gray-400 hover:text-gray-600"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -196,6 +235,7 @@ const Register: React.FC = () => {
               </div>
             </div>
 
+            {/* Términos y condiciones */}
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -221,12 +261,13 @@ const Register: React.FC = () => {
               </label>
             </div>
 
+            {/* Botón de envío */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
-              {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
+              {isLoading ? "Creando cuenta..." : `Crear Cuenta ${formData.role === 'agent' ? 'de Agente' : 'de Usuario'}`}
             </button>
           </form>
 

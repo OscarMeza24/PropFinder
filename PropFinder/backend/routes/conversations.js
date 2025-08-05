@@ -1,22 +1,23 @@
-const express = require("express");
+const express = require('express');
+
 const router = express.Router();
-const jwt = require("jsonwebtoken");
-const { pool } = require("../config/database.js");
-const asyncHandler = require("../utils/asyncHandler.js");
-const ApiError = require("../utils/ApiError.js");
+const jwt = require('jsonwebtoken');
+const { pool } = require('../config/database.js');
+const asyncHandler = require('../utils/asyncHandler.js');
+const ApiError = require('../utils/ApiError.js');
 
 // Middleware de autenticación
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return next(new ApiError(401, "Token de acceso requerido"));
+    return next(new ApiError(401, 'Token de acceso requerido'));
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
-      return next(new ApiError(403, "Token inválido o expirado"));
+      return next(new ApiError(403, 'Token inválido o expirado'));
     }
     req.user = user;
     next();
@@ -25,7 +26,7 @@ const authenticateToken = (req, res, next) => {
 
 // Obtener todas las conversaciones del usuario (basado en mensajes directos)
 router.get(
-  "/",
+  '/',
   authenticateToken,
   asyncHandler(async (req, res) => {
     const userId = req.user.id; // Cambiado de userId a id
@@ -82,23 +83,23 @@ router.get(
       success: true,
       data: result.rows,
     });
-  })
+  }),
 );
 
 // Obtener mensajes entre dos usuarios específicos
 router.get(
-  "/:otherUserId/messages",
+  '/:otherUserId/messages',
   authenticateToken,
   asyncHandler(async (req, res) => {
     const userId = req.user.id; // Cambiado de userId a id
     const otherUserId = req.params.otherUserId;
 
     // Verificar que el otro usuario existe
-    const userQuery = "SELECT id, name FROM users WHERE id = $1";
+    const userQuery = 'SELECT id, name FROM users WHERE id = $1';
     const userResult = await pool.query(userQuery, [otherUserId]);
 
     if (userResult.rows.length === 0) {
-      return next(new ApiError(404, "Usuario no encontrado"));
+      return next(new ApiError(404, 'Usuario no encontrado'));
     }
 
     // Obtener mensajes entre estos usuarios
@@ -138,7 +139,7 @@ router.get(
 
 // Enviar mensaje entre usuarios
 router.post(
-  "/:otherUserId/messages",
+  '/:otherUserId/messages',
   authenticateToken,
   asyncHandler(async (req, res) => {
     const userId = req.user.id; // Cambiado de userId a id
@@ -146,15 +147,15 @@ router.post(
     const { content } = req.body;
 
     if (!content || content.trim().length === 0) {
-      return next(new ApiError(400, "El contenido del mensaje es requerido"));
+      return next(new ApiError(400, 'El contenido del mensaje es requerido'));
     }
 
     // Verificar que el otro usuario existe
-    const userQuery = "SELECT id FROM users WHERE id = $1";
+    const userQuery = 'SELECT id FROM users WHERE id = $1';
     const userResult = await pool.query(userQuery, [otherUserId]);
 
     if (userResult.rows.length === 0) {
-      return next(new ApiError(404, "Usuario no encontrado"));
+      return next(new ApiError(404, 'Usuario no encontrado'));
     }
 
     // Insertar mensaje
@@ -171,10 +172,10 @@ router.post(
 
     res.status(201).json({
       success: true,
-      message: "Mensaje enviado exitosamente",
+      message: 'Mensaje enviado exitosamente',
       data: messageResult.rows[0],
     });
-  })
+  }),
 );
 
 module.exports = router;
