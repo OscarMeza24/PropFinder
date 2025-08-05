@@ -9,7 +9,7 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 5, // máximo 5 intentos
   message: {
-    error: 'Demasiados intentos de login. Intenta de nuevo en 15 minutos.',
+    error: 'Demasiados intentos de login. Intenta de nuevo en 16 minutos.',
   },
   standardHeaders: true,
   legacyHeaders: false,
