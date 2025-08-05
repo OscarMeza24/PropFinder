@@ -28,6 +28,10 @@ export interface Property {
     avatar?: string;
   };
   featured: boolean;
+  status?: "active" | "pending" | "sold" | "rented" | "deleted";
+  views?: number;
+  contacts?: number;
+  pendingVisits?: number;
   createdAt: string;
   updatedAt: string;
 }

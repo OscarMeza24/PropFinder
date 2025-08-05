@@ -16,6 +16,7 @@ interface RegisterData {
   password: string;
   name: string;
   phone?: string;
+  role: 'user' | 'agent';
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

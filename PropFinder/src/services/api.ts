@@ -55,6 +55,9 @@ export interface Property {
   agent_name?: string;
   agent_phone?: string;
   agent_email?: string;
+  views?: number;
+  contacts?: number;
+  pendingVisits?: number;
   created_at: string;
   updated_at: string;
 }
@@ -549,6 +552,20 @@ class ApiService {
 
   isAuthenticated(): boolean {
     return !!this.token;
+  }
+
+  // Verificar si el token está expirado
+  isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      return payload.exp < currentTime;
+    } catch {
+      return true;
+    }
   }
 
   // WebSocket

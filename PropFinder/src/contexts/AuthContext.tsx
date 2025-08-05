@@ -8,6 +8,7 @@ interface RegisterData {
   password: string;
   name: string;
   phone?: string;
+  role: 'user' | 'agent';
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -61,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         email: userData.email,
         password: userData.password,
         name: userData.name,
+        role: userData.role,
         ...(userData.phone && { phone: userData.phone }),
       };
 
