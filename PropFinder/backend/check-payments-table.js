@@ -1,5 +1,5 @@
-require("dotenv").config();
-const { Pool } = require("pg");
+require('dotenv').config();
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -8,7 +8,7 @@ const pool = new Pool({
 
 async function checkPaymentsTable() {
   try {
-    console.log("🔍 Verificando tabla payments...");
+    console.log('🔍 Verificando tabla payments...');
 
     // Verificar si existe la tabla payments
     const tableExistsQuery = `
@@ -22,7 +22,7 @@ async function checkPaymentsTable() {
     const tableExists = await pool.query(tableExistsQuery);
 
     if (tableExists.rows[0].exists) {
-      console.log("✅ Tabla payments ya existe");
+      console.log('✅ Tabla payments ya existe');
 
       // Mostrar estructura de la tabla
       const columnsQuery = `
@@ -32,10 +32,10 @@ async function checkPaymentsTable() {
         ORDER BY ordinal_position
       `;
       const columns = await pool.query(columnsQuery);
-      console.log("📋 Estructura de la tabla payments:");
+      console.log('📋 Estructura de la tabla payments:');
       console.table(columns.rows);
     } else {
-      console.log("❌ Tabla payments no existe. Creándola...");
+      console.log('❌ Tabla payments no existe. Creándola...');
 
       // Crear tabla payments
       const createTableQuery = `
@@ -67,13 +67,13 @@ async function checkPaymentsTable() {
       `;
 
       await pool.query(createTableQuery);
-      console.log("✅ Tabla payments creada exitosamente");
+      console.log('✅ Tabla payments creada exitosamente');
     }
 
     await pool.end();
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error:", error.message);
+    console.error('❌ Error:', error.message);
     await pool.end();
     process.exit(1);
   }
