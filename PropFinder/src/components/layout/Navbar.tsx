@@ -66,48 +66,50 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link
-              to="/"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive("/")
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-              }`}
-            >
-              Inicio
-            </Link>
-            <Link
-              to="/properties"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive("/properties")
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-              }`}
-            >
-              Propiedades
-            </Link>
             {user && (
-              <Link
-                to="/chat"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive("/chat")
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                }`}
-              >
-                Chat
-              </Link>
+              <>
+                <Link
+                  to="/"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive("/")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  Inicio
+                </Link>
+                <Link
+                  to="/properties"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive("/properties")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  Propiedades
+                </Link>
+                <Link
+                  to="/chat"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive("/chat")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  Chat
+                </Link>
+                <Link
+                  to="/plans"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive("/plans")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  Planes
+                </Link>
+              </>
             )}
-            <Link
-              to="/plans"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive("/plans")
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-              }`}
-            >
-              Planes
-            </Link>
           </div>
 
           {/* User Menu */}
@@ -276,52 +278,54 @@ const Navbar: React.FC = () => {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
-            <Link
-              to="/"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive("/")
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Inicio
-            </Link>
-            <Link
-              to="/properties"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive("/properties")
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Propiedades
-            </Link>
             {user && (
-              <Link
-                to="/chat"
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  isActive("/chat")
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Chat
-              </Link>
+              <>
+                <Link
+                  to="/"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive("/")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Inicio
+                </Link>
+                <Link
+                  to="/properties"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive("/properties")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Propiedades
+                </Link>
+                <Link
+                  to="/chat"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive("/chat")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Chat
+                </Link>
+                <Link
+                  to="/plans"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive("/plans")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Planes
+                </Link>
+              </>
             )}
-            <Link
-              to="/plans"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive("/plans")
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Planes
-            </Link>
 
             {user ? (
               <div className="border-t pt-3">
