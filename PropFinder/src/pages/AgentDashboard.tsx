@@ -75,7 +75,7 @@ const AgentDashboard: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard del Agente</h1>
           <p className="text-gray-600 mt-2">
-            Bienvenido de vuelta !!!! {user?.name}
+            Bienvenido de vuelta  {user?.name}
           </p>
         </div>
 
