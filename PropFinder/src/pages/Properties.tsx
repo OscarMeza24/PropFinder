@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Search, Filter, MapPin, Bed, Bath, Square, Heart, ArrowRight } from 'lucide-react';
 import { useProperty } from '../contexts/PropertyContext';
 
 import PropertyCardSkeleton from '../components/skeletons/PropertyCardSkeleton';
 
 const Properties: React.FC = () => {
-    const { properties, searchProperties, isLoading } = useProperty();
+        const { properties, searchProperties, isLoading } = useProperty();
+    const location = useLocation();
       
         const [favorites, setFavorites] = useState<string[]>(() => {
     try {
@@ -27,7 +28,20 @@ const Properties: React.FC = () => {
     bathrooms: '',
     location: ''
   });
-    const [showFilters, setShowFilters] = useState(false);
+        const [showFilters, setShowFilters] = useState(false);
+
+  // Effect to sync URL search params with component state
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const queryFromUrl = params.get('q') || '';
+    const locationFromUrl = params.get('location') || '';
+
+    setSearchQuery(queryFromUrl);
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      location: locationFromUrl
+    }));
+  }, [location.search]);
 
   useEffect(() => {
     let filtered = properties;

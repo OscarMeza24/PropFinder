@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, MapPin, TrendingUp, Users, Star, ArrowRight } from 'lucide-react';
 import { useProperty } from '../contexts/PropertyContext';
 import FeaturedPropertiesCarousel from '../components/home/FeaturedPropertiesCarousel';
@@ -9,11 +9,20 @@ const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   const { featuredProperties } = useProperty();
+  const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement search logic here
-    console.log('Searching for:', searchQuery, 'in', searchLocation);
+    // Construir los parámetros de búsqueda para la URL
+    const params = new URLSearchParams();
+    if (searchQuery) {
+      params.append('q', searchQuery);
+    }
+    if (searchLocation) {
+      params.append('location', searchLocation);
+    }
+    // Navegar a la página de propiedades con los filtros
+    navigate(`/properties?${params.toString()}`);
   };
 
   const stats = [
