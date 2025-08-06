@@ -126,6 +126,32 @@ export interface Payment {
   description: string;
 }
 
+export interface Kpi {
+  title: string;
+  value: string;
+  change: string;
+  changeType: "increase" | "decrease";
+}
+
+export interface WeeklyActivity {
+  name: string;
+  vistas: number;
+  mensajes: number;
+}
+
+export interface PopularProperty {
+  id: number;
+  name: string;
+  views: number;
+  favorites: number;
+}
+
+export interface AnalyticsDashboardResponse {
+  kpis: Kpi[];
+  weeklyActivity: WeeklyActivity[];
+  popularProperties: PopularProperty[];
+}
+
 // Clase para manejar la API
 class ApiService {
   private token: string | null = null;
@@ -354,26 +380,6 @@ class ApiService {
     }`;
 
     return this.request<PropertiesResponse>(endpoint);
-  }
-
-  // Métodos de Favoritos
-  async getFavorites(): Promise<Property[]> {
-    return this.request<Property[]>("/favorites", {
-      method: "GET",
-    });
-  }
-
-  async addFavorite(propertyId: number): Promise<any> {
-    return this.request("/favorites", {
-      method: "POST",
-      body: JSON.stringify({ propertyId }),
-    });
-  }
-
-  async removeFavorite(propertyId: number): Promise<any> {
-    return this.request(`/favorites/${propertyId}`, {
-      method: "DELETE",
-    });
   }
 
   // Métodos de pagos unificados
