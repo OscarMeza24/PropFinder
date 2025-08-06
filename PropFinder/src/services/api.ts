@@ -383,6 +383,12 @@ class ApiService {
   }
 
   // Métodos de pagos unificados
+  // Métodos de Analíticas
+  async getWeeklyActivity(): Promise<WeeklyActivity[]> {
+    return this.request<WeeklyActivity[]>("/analytics/weekly-activity");
+  }
+
+  // Métodos de pagos unificados
   async getPaymentProviders(): Promise<{ providers: string[] }> {
     return this.request<{ providers: string[] }>("/payments/providers");
   }

@@ -233,4 +233,57 @@ router.get('/performance', ...authenticateAgent, asyncHandler(async (req, res) =
   });
 }));
 
+// Obtener actividad semanal para el gráfico
+router.get('/weekly-activity', ...authenticateAgent, asyncHandler(async (req, res) => {
+  const agentId = req.user.userId;
+
+  const query = `
+    WITH date_series AS (
+      SELECT generate_series(
+        current_date - interval '6 days',
+        current_date,
+        '1 day'
+      )::date AS day
+    ),
+    daily_views AS (
+      SELECT
+        v.created_at::date AS day,
+        COUNT(v.id) AS view_count
+      FROM property_views v
+      JOIN properties p ON v.property_id = p.id
+      WHERE p.agent_id = $1 AND v.created_at >= current_date - interval '6 days'
+      GROUP BY v.created_at::date
+    ),
+    daily_messages AS (
+      SELECT
+        m.created_at::date AS day,
+        COUNT(m.id) AS message_count
+      FROM messages m
+      WHERE m.receiver_id = $1 AND m.created_at >= current_date - interval '6 days'
+      GROUP BY m.created_at::date
+    )
+    SELECT
+      -- Formatear el día de la semana en español
+      CASE 
+        WHEN to_char(ds.day, 'DY') = 'MON' THEN 'Lunes'
+        WHEN to_char(ds.day, 'DY') = 'TUE' THEN 'Martes'
+        WHEN to_char(ds.day, 'DY') = 'WED' THEN 'Miércoles'
+        WHEN to_char(ds.day, 'DY') = 'THU' THEN 'Jueves'
+        WHEN to_char(ds.day, 'DY') = 'FRI' THEN 'Viernes'
+        WHEN to_char(ds.day, 'DY') = 'SAT' THEN 'Sábado'
+        WHEN to_char(ds.day, 'DY') = 'SUN' THEN 'Domingo'
+      END as name,
+      COALESCE(dv.view_count, 0)::int AS vistas,
+      COALESCE(dm.message_count, 0)::int AS mensajes
+    FROM date_series ds
+    LEFT JOIN daily_views dv ON ds.day = dv.day
+    LEFT JOIN daily_messages dm ON ds.day = dm.day
+    ORDER BY ds.day;
+  `;
+
+  const result = await pool.query(query, [agentId]);
+
+  res.json(result.rows);
+}));
+
 module.exports = router;
