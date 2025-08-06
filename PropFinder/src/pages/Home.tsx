@@ -1,124 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, MapPin, TrendingUp, Users, Star, ArrowRight } from 'lucide-react';
-import { Property } from '../contexts/property-context-utils';
+import { useProperty } from '../contexts/PropertyContext';
 import FeaturedPropertiesCarousel from '../components/home/FeaturedPropertiesCarousel';
 
 const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-  // const { featuredProperties } = useProperty(); // Se han comentado para usar datos de prueba
-
-  const featuredProperties: Property[] = [
-    {
-      id: '1',
-      title: 'Lujoso Apartamento en el Centro',
-      price: 500000,
-      type: 'apartment',
-      bedrooms: 3,
-      bathrooms: 2,
-      area: 150,
-      location: {
-        address: 'Calle Falsa 123',
-        city: 'Springfield',
-        state: 'IL',
-        zipCode: '62704',
-      },
-      images: ['https://i.imgur.com/Nn13T2Q.jpeg', 'https://i.imgur.com/gJ6SPt8.jpeg'],
-      description: 'Un hermoso apartamento con vistas increíbles.',
-      amenities: ['Piscina', 'Gimnasio', 'Seguridad 24h'],
-      agent: {
-        id: 'agent1',
-        name: 'Juan Pérez',
-        email: 'juan.perez@example.com',
-        phone: '555-1234',
-      },
-      featured: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      title: 'Casa Familiar con Jardín',
-      price: 750000,
-      type: 'house',
-      bedrooms: 4,
-      bathrooms: 3,
-      area: 250,
-      location: {
-        address: 'Avenida Siempreviva 742',
-        city: 'Springfield',
-        state: 'IL',
-        zipCode: '62704',
-      },
-      images: ['https://i.imgur.com/S2Yh0bu.jpeg', 'https://i.imgur.com/K2yY1p6.jpeg'],
-      description: 'Espaciosa casa ideal para una familia grande.',
-      amenities: ['Jardín', 'Garaje', 'Patio'],
-      agent: {
-        id: 'agent2',
-        name: 'Maria Rodriguez',
-        email: 'maria.rodriguez@example.com',
-        phone: '555-5678',
-      },
-      featured: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      title: 'Moderno Condo Urbano',
-      price: 450000,
-      type: 'condo',
-      bedrooms: 2,
-      bathrooms: 2,
-      area: 120,
-      location: {
-        address: 'Boulevard del Ocaso 45',
-        city: 'Springfield',
-        state: 'IL',
-        zipCode: '62704',
-      },
-      images: ['https://i.imgur.com/K2yY1p6.jpeg', 'https://i.imgur.com/Nn13T2Q.jpeg'],
-      description: 'Condominio con acabados de lujo y excelente ubicación.',
-      amenities: ['Rooftop', 'Conserje', 'Gimnasio'],
-      agent: {
-        id: 'agent1',
-        name: 'Juan Pérez',
-        email: 'juan.perez@example.com',
-        phone: '555-1234',
-      },
-      featured: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-     {
-      id: '4',
-      title: 'Acogedora Casa de Campo',
-      price: 620000,
-      type: 'house',
-      bedrooms: 3,
-      bathrooms: 2,
-      area: 200,
-      location: {
-        address: 'Camino del Roble 88',
-        city: 'Shelbyville',
-        state: 'IL',
-        zipCode: '62565',
-      },
-      images: ['https://i.imgur.com/gJ6SPt8.jpeg', 'https://i.imgur.com/S2Yh0bu.jpeg'],
-      description: 'Perfecta para escapar de la ciudad y disfrutar de la naturaleza.',
-      amenities: ['Chimenea', 'Amplio jardín', 'Vistas al bosque'],
-      agent: {
-        id: 'agent3',
-        name: 'Carlos Gomez',
-        email: 'carlos.gomez@example.com',
-        phone: '555-8765',
-      },
-      featured: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
+  const { featuredProperties } = useProperty();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,7 +49,7 @@ const Home: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+        {/* <div className="absolute inset-0 bg-black opacity-20"></div> */}
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
