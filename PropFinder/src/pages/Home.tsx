@@ -8,7 +8,8 @@ import Testimonials from '../components/home/Testimonials';
 const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-  const { featuredProperties } = useProperty();
+  const { properties } = useProperty();
+  const featuredProperties = properties.slice(0, 8);
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -183,7 +184,7 @@ const Home: React.FC = () => {
             ¿Listo para encontrar tu próximo hogar?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Únete a miles de usuarios que ya confían en PropFinder
+            Únete a miles de usuarios que ya confían en PropFinder.
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Link

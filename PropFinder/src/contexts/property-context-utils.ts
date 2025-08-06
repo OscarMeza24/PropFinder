@@ -45,6 +45,8 @@ export interface Property {
   agent_phone?: string;
   latitude?: number;
   longitude?: number;
+  // Geolocation fields
+  distance?: number | null;
 }
 
 interface PropertyContextType {

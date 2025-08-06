@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { MapPin, Bed, Bath, Square, Heart, Share2, Calendar, MessageCircle, Phone } from 'lucide-react';
 import { useProperty } from '../contexts/PropertyContext';
 import { useChat } from '../contexts/ChatContext';
 import { useAuth } from '../contexts/auth-context-utils';
+import PropertyMap from '../components/ui/PropertyMap';
 
 const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -198,12 +199,23 @@ const PropertyDetail: React.FC = () => {
 
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Ubicación</h3>
-              <div className="bg-gray-200 rounded-lg h-64 flex items-center justify-center">
-                <div className="text-center text-gray-600">
-                  <MapPin className="h-12 w-12 mx-auto mb-2" />
-                  <p>Mapa interactivo</p>
-                  <p className="text-sm">{property.location.address}, {property.location.city}</p>
+              <div className="rounded-lg overflow-hidden" style={{ height: '400px' }}>
+                <PropertyMap
+                  properties={[property]}
+                  selectedProperty={property}
+                  interactive={true}
+                  showSearch={false}
+                  isFullscreen={false}
+                />
+              </div>
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center text-gray-600">
+                  <MapPin className="h-5 w-5 mr-2" />
+                  <span>{property.location.address}, {property.location.city}, {property.location.state}</span>
                 </div>
+                {property.location.zipCode && (
+                  <p className="text-sm text-gray-500 mt-1">Código postal: {property.location.zipCode}</p>
+                )}
               </div>
             </div>
           </div>

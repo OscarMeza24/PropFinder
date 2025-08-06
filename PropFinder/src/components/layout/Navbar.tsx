@@ -54,8 +54,15 @@ const Navbar: React.FC = () => {
     };
   }, [isProfileMenuOpen, isNotificationsOpen]);
 
+  // Cerrar menús cuando cambie la ruta
+  useEffect(() => {
+    setIsMenuOpen(false);
+    setIsProfileMenuOpen(false);
+    setIsNotificationsOpen(false);
+  }, [location.pathname]);
+
   return (
-    <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
+    <nav className="bg-white shadow-lg fixed w-full top-0 z-[60]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -65,12 +72,12 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-8 relative z-[65]">
             {user && (
               <>
                 <Link
                   to="/"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors relative z-[66] ${
                     isActive("/")
                       ? "text-blue-600 bg-blue-50"
                       : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
@@ -80,7 +87,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link
                   to="/properties"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors relative z-[66] ${
                     isActive("/properties")
                       ? "text-blue-600 bg-blue-50"
                       : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
@@ -90,7 +97,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link
                   to="/favorites"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors relative z-[66] ${
                     isActive("/favorites")
                       ? "text-blue-600 bg-blue-50"
                       : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
@@ -100,7 +107,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link
                   to="/chat"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors relative z-[66] ${
                     isActive("/chat")
                       ? "text-blue-600 bg-blue-50"
                       : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
@@ -110,7 +117,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link
                   to="/plans"
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors relative z-[66] ${
                     isActive("/plans")
                       ? "text-blue-600 bg-blue-50"
                       : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
@@ -123,14 +130,14 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 relative z-[65]">
             {user ? (
               <>
                 {/* Notifications */}
                 <div className="relative">
                   <button
                     onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                    className="p-2 rounded-full text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors relative"
+                    className="p-2 rounded-full text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors relative z-[66]"
                   >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
@@ -143,7 +150,7 @@ const Navbar: React.FC = () => {
                   {isNotificationsOpen && (
                     <div
                       id="notifications-menu"
-                      className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50 max-h-96 overflow-y-auto"
+                      className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-[70] max-h-96 overflow-y-auto"
                     >
                       <div className="flex justify-between items-center px-4 py-2 border-b border-gray-100">
                         <h3 className="text-sm font-semibold text-gray-900">
@@ -207,7 +214,7 @@ const Navbar: React.FC = () => {
                 <div className="relative">
                   <button
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
+                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors relative z-[66]"
                   >
                     <img
                       src={
@@ -223,7 +230,7 @@ const Navbar: React.FC = () => {
                   {isProfileMenuOpen && (
                     <div
                       id="profile-menu"
-                      className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-[70]"
                     >
                       <Link
                         to={user?.role === 'agent' ? '/agent/dashboard' : '/dashboard'}
