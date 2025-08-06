@@ -17,12 +17,15 @@ PropFinder es una plataforma inmobiliaria moderna y completa construida con Reac
 
 ### 🏢 Para Agentes Inmobiliarios
 
-- **📊 Dashboard Completo**: Panel de control con estadísticas y métricas
-- **🏠 Gestión de Propiedades**: Publicar, editar y administrar propiedades con galerías de imágenes
-- **📅 Calendario de Visitas**: Programación y gestión de visitas con clientes
-- **💬 Chat Integrado**: Comunicación directa con clientes potenciales
-- **📈 Analytics**: Seguimiento de visualizaciones, contactos e interacciones
-- **💰 Gestión de Pagos**: Integración con Stripe, PayPal y MercadoPago
+- **�‍💼 Registro Diferenciado**: Registro específico como agente con validaciones adicionales
+- **�📊 Dashboard Específico**: Panel de control exclusivo para agentes con estadísticas avanzadas
+- **🏠 Gestión Completa de Propiedades**: Crear, editar y administrar propiedades con galerías de imágenes
+- **� Analytics en Tiempo Real**: Métricas de vistas, contactos, visitas pendientes y comisiones estimadas
+- **📅 Gestión de Visitas**: Sistema completo de programación y confirmación de visitas
+- **💬 CRM Integrado**: Herramientas de gestión de clientes y seguimiento de leads
+- **� Lista de Propiedades**: Vista detallada de todas las propiedades con acciones rápidas
+- **🎯 Control de Acceso**: Funciones exclusivas protegidas por rol de usuario
+- **📱 Interfaz Intuitiva**: Diseño optimizado para flujo de trabajo de agentes
 
 ### � Para Administradores
 
@@ -156,11 +159,25 @@ PropFinder es una plataforma inmobiliaria moderna y completa construida con Reac
 
 ### 🌐 URLs de la Aplicación
 
-- **Frontend**: http://localhost:3000
+- **Frontend**: http://localhost:3001 (puerto automático si 3000 está ocupado)
 - **Backend API**: http://localhost:5000
 - **WebSocket**: ws://localhost:5001
 - **WebSocket Simple**: ws://localhost:5002 (para testing)
 - **Health Check**: http://localhost:5000/api/health
+
+### 🚪 Rutas Específicas por Rol
+
+#### Para Usuarios
+- **Dashboard**: http://localhost:3001/dashboard
+- **Propiedades**: http://localhost:3001/properties
+- **Favoritos**: http://localhost:3001/favorites
+- **Chat**: http://localhost:3001/chat
+
+#### Para Agentes
+- **Dashboard de Agente**: http://localhost:3001/agent/dashboard
+- **Crear Propiedad**: http://localhost:3001/properties/new
+- **Gestión de Visitas**: http://localhost:3001/agent/visits
+- **Gestión de Contactos**: http://localhost:3001/agent/contacts
 
 ## 📁 Estructura del Proyecto
 
@@ -234,6 +251,21 @@ npm run type-check
 ## 🆕 Nuevas Funcionalidades y Mejoras
 
 ### ✨ Mejoras Recientes
+
+#### 🆕 Sistema de Roles y Agentes
+- **👨‍💼 Separación Completa de Roles**: Sistema diferenciado entre usuarios y agentes inmobiliarios
+- **🔐 Registro por Rol**: Proceso de registro específico para usuarios y agentes con validaciones únicas
+- **📊 Dashboard de Agentes**: Panel exclusivo para agentes con métricas avanzadas y gestión de propiedades
+- **🏠 Creación de Propiedades**: Formulario completo y profesional para que agentes publiquen propiedades
+- **🧭 Navegación Inteligente**: Redirección automática al dashboard correcto según el rol del usuario
+- **🛡️ Control de Acceso**: Protección de rutas y funcionalidades específicas por rol
+
+#### 🔌 WebSocket y Conectividad
+- **🚫 Eliminación de Bucles Infinitos**: Solución definitiva al problema de reconexiones por tokens expirados
+- **🔑 Validación de Tokens**: Sistema mejorado de verificación antes de establecer conexiones WebSocket
+- **📡 Manejo de Errores Específicos**: Códigos de error diferenciados para mejor debugging y UX
+- **🔄 Reconexión Inteligente**: Sistema que evita intentos de reconexión con credenciales inválidas
+- **📝 Logging Mejorado**: Mensajes de error más descriptivos para facilitar el desarrollo
 
 #### API y Backend
 - **🔄 Refactorización de recuperación de perfiles**: Optimización del sistema de perfiles de usuario
