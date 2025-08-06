@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Send, Phone, Video, MoreVertical, Paperclip, Smile } from 'lucide-react';
 import { useChat } from '../contexts/ChatContext';
 import { useAuth } from '../contexts/auth-context-utils';
+import QuickReviewButton from '../components/ui/QuickReviewButton';
 
 const Chat: React.FC = () => {
   const { user } = useAuth();
@@ -11,7 +12,7 @@ const Chat: React.FC = () => {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMessage.trim() && activeRoom) {
-      sendMessage(newMessage, activeRoom.id);
+      sendMessage(newMessage, activeRoom.otherUserId);
       setNewMessage('');
     }
   };
@@ -64,7 +65,7 @@ const Chat: React.FC = () => {
                 {chatRooms.map((room) => (
                   <div
                     key={room.id}
-                    onClick={() => joinRoom(room.id)}
+                    onClick={() => joinRoom(room.otherUserId)}
                     className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
                       activeRoom?.id === room.id ? 'bg-blue-50 border-blue-200' : ''
                     }`}
@@ -104,6 +105,14 @@ const Chat: React.FC = () => {
                         <p className="text-sm text-gray-600">Agente en línea</p>
                       </div>
                       <div className="flex items-center space-x-2">
+                        <QuickReviewButton
+                          targetId="agent-1" // En producción esto vendría del contexto del chat
+                          targetName={activeRoom.name}
+                          targetType="agent"
+                          buttonText="Evaluar"
+                          buttonSize="sm"
+                          variant="outline"
+                        />
                         <button className="p-2 text-gray-600 hover:text-blue-600 transition-colors">
                           <Phone className="h-5 w-5" />
                         </button>
@@ -122,23 +131,23 @@ const Chat: React.FC = () => {
                     {messages.map((message) => (
                       <div
                         key={message.id}
-                        className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${message.senderId === user.id.toString() ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
                           className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            message.senderId === user.id
+                            message.senderId === user.id.toString()
                               ? 'bg-blue-600 text-white'
                               : 'bg-gray-200 text-gray-900'
                           }`}
                         >
-                          {message.senderId !== user.id && (
+                          {message.senderId !== user.id.toString() && (
                             <div className="text-xs font-semibold mb-1 opacity-75">
                               {message.senderName}
                             </div>
                           )}
                           <div>{message.content}</div>
                           <div className={`text-xs mt-1 ${
-                            message.senderId === user.id ? 'text-blue-100' : 'text-gray-500'
+                            message.senderId === user.id.toString() ? 'text-blue-100' : 'text-gray-500'
                           }`}>
                             {formatTime(message.timestamp)}
                           </div>

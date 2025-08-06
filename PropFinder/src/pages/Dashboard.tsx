@@ -1,14 +1,24 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Home, MessageCircle, Calendar, TrendingUp, Star, Plus, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/auth-context-utils';
 import { useProperty } from '../contexts/PropertyContext';
 import { useChat } from '../contexts/ChatContext';
+import ReviewSystem from '../components/ui/ReviewSystem';
+import ReviewStats from '../components/ui/ReviewStats';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { properties, featuredProperties } = useProperty();
   const { chatRooms } = useChat();
+  const navigate = useNavigate();
+
+  // Redireccionar agentes a su dashboard específico
+  useEffect(() => {
+    if (user && user.role === 'agent') {
+      navigate('/agent/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   if (!user) {
     return (
@@ -122,7 +132,7 @@ const Dashboard: React.FC = () => {
                     />
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{property.title}</h3>
-                      <p className="text-sm text-gray-600">{property.city}</p>
+                      <p className="text-sm text-gray-600">{property.location?.city || 'Ubicación no especificada'}</p>
                       <p className="text-sm font-medium text-blue-600">
                         ${property.price.toLocaleString()}
                       </p>
@@ -216,6 +226,25 @@ const Dashboard: React.FC = () => {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          {/* Estadísticas de Reseñas */}
+          <div className="relative">
+            <ReviewStats 
+              userType="client"
+              reviews={{
+                total: 12,
+                average: 4.2,
+                breakdown: { 5: 6, 4: 4, 3: 1, 2: 1, 1: 0 }
+              }}
+            />
+          </div>
+
+          {/* Sistema de Reseñas */}
+          <div className="lg:col-span-2 relative">
+            <ReviewSystem userType="client" />
           </div>
         </div>
       </div>

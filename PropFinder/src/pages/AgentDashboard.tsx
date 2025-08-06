@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/auth-context-utils';
 import { useProperty } from '../contexts/PropertyContext';
+import ReviewSystem from '../components/ui/ReviewSystem';
+import ReviewStats from '../components/ui/ReviewStats';
 
 interface AgentStats {
   totalProperties: number;
@@ -297,6 +299,25 @@ const AgentDashboard: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          {/* Estadísticas de Reseñas */}
+          <div>
+            <ReviewStats 
+              userType="agent"
+              reviews={{
+                total: 28,
+                average: 4.6,
+                breakdown: { 5: 18, 4: 8, 3: 2, 2: 0, 1: 0 }
+              }}
+            />
+          </div>
+
+          {/* Sistema de Reseñas */}
+          <div className="lg:col-span-2">
+            <ReviewSystem userType="agent" />
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { useProperty } from '../contexts/PropertyContext';
 import { useChat } from '../contexts/ChatContext';
 import { useAuth } from '../contexts/auth-context-utils';
 import PropertyMap from '../components/ui/PropertyMap';
+import QuickReviewButton from '../components/ui/QuickReviewButton';
 
 const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -246,6 +247,20 @@ const PropertyDetail: React.FC = () => {
                     <Phone className="h-5 w-5" />
                     <span>Llamar Ahora</span>
                   </a>
+                  <div className="pt-2">
+                    <div className="w-full">
+                      <QuickReviewButton
+                        targetId={property.agent.id}
+                        targetName={property.agent.name}
+                        targetType="agent"
+                        propertyId={property.id}
+                        propertyTitle={property.title}
+                        buttonText="Evaluar Agente"
+                        buttonSize="md"
+                        variant="outline"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
