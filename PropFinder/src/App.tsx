@@ -10,7 +10,7 @@ import Footer from './components/layout/Footer';
 import Home from './pages/Home';
 import Properties from './pages/Properties';
 import PropertyDetail from './pages/PropertyDetail';
-import Dashboard from './pages/Dashboard';
+
 import Chat from './pages/Chat';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -19,6 +19,7 @@ import Analytics from './pages/Analytics';
 import Notifications from './pages/Notifications';
 import CreateProperty from './pages/CreateProperty';
 import AgentDashboard from './pages/AgentDashboard';
+import FavoritesPage from './pages/FavoritesPage';
 import VerifyEmail from './pages/VerifyEmail';
 
 function App() {
@@ -37,7 +38,8 @@ function App() {
                     <Route path="/properties" element={<Properties />} />
                     <Route path="/properties/new" element={<CreateProperty />} />
                     <Route path="/properties/:id" element={<PropertyDetail />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
+                    
+                    <Route path="/favorites" element={<FavoritesPage />} />
                     <Route path="/agent/dashboard" element={<AgentDashboard />} />
                     <Route path="/chat" element={<Chat />} />
                     <Route path="/login" element={<Login />} />

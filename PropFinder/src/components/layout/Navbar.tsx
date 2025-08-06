@@ -89,6 +89,16 @@ const Navbar: React.FC = () => {
                   Propiedades
                 </Link>
                 <Link
+                  to="/favorites"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive("/favorites")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  Favoritos
+                </Link>
+                <Link
                   to="/chat"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive("/chat")

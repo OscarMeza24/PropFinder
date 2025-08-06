@@ -383,6 +383,26 @@ class ApiService {
   }
 
   // Métodos de pagos unificados
+  // Métodos de Favoritos
+  async getFavorites(): Promise<Property[]> {
+    return this.request<Property[]>("/favorites", {
+      method: "GET",
+    });
+  }
+
+  async addFavorite(propertyId: number): Promise<any> {
+    return this.request("/favorites", {
+      method: "POST",
+      body: JSON.stringify({ propertyId }),
+    });
+  }
+
+  async removeFavorite(propertyId: number): Promise<any> {
+    return this.request(`/favorites/${propertyId}`, {
+      method: "DELETE",
+    });
+  }
+
   // Métodos de Analíticas
   async getWeeklyActivity(): Promise<WeeklyActivity[]> {
     return this.request<WeeklyActivity[]>("/analytics/weekly-activity");

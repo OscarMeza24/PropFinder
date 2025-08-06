@@ -2,15 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, MapPin, Bed, Bath, Square, Heart, ArrowRight } from 'lucide-react';
 import { useProperty } from '../contexts/PropertyContext';
-import { useAuth } from '../contexts/auth-context-utils';
-import apiService from '../services/api';
+
 import PropertyCardSkeleton from '../components/skeletons/PropertyCardSkeleton';
 
 const Properties: React.FC = () => {
     const { properties, searchProperties, isLoading } = useProperty();
-      const { user } = useAuth();
-  const isAuthenticated = !!user;
-      const [favorites, setFavorites] = useState<string[]>([]);
+      
+        const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const savedFavorites = localStorage.getItem('favorites');
+      return savedFavorites ? JSON.parse(savedFavorites) : [];
+    } catch (error) {
+      console.error('Error reading favorites from localStorage', error);
+      return [];
+    }
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProperties, setFilteredProperties] = useState(properties);
   const [filters, setFilters] = useState({
@@ -22,20 +28,6 @@ const Properties: React.FC = () => {
     location: ''
   });
     const [showFilters, setShowFilters] = useState(false);
-
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (isAuthenticated && user) {
-        try {
-          const favoriteProperties = await apiService.getFavorites();
-                              setFavorites(favoriteProperties.map(p => String(p.id)));
-        } catch (error) {
-          console.error('Error fetching favorites:', error);
-        }
-      }
-    };
-    fetchFavorites();
-  }, [isAuthenticated, user]);
 
   useEffect(() => {
     let filtered = properties;
@@ -85,23 +77,21 @@ const Properties: React.FC = () => {
     }));
   };
 
-          const toggleFavorite = async (propertyId: string) => {
-    if (!isAuthenticated) {
-      // Opcional: Redirigir a login o mostrar un mensaje
-      alert('Por favor, inicia sesión para añadir a favoritos');
-      return;
+          const toggleFavorite = (propertyId: string) => {
+    const isFavorite = favorites.includes(propertyId);
+    let updatedFavorites;
+
+    if (isFavorite) {
+      updatedFavorites = favorites.filter(id => id !== propertyId);
+    } else {
+      updatedFavorites = [...favorites, propertyId];
     }
 
+    setFavorites(updatedFavorites);
     try {
-      if (favorites.includes(propertyId)) {
-                                await apiService.removeFavorite(parseInt(propertyId, 10));
-        setFavorites(prev => prev.filter(id => id !== propertyId));
-      } else {
-                                await apiService.addFavorite(parseInt(propertyId, 10));
-        setFavorites(prev => [...prev, propertyId]);
-      }
+      localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
     } catch (error) {
-      console.error('Error updating favorites:', error);
+      console.error('Error saving favorites to localStorage', error);
     }
   };
 
