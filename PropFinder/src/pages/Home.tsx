@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, TrendingUp, Users, Star, ArrowRight } from 'lucide-react';
 import { useProperty } from '../contexts/PropertyContext';
 import FeaturedPropertiesCarousel from '../components/home/FeaturedPropertiesCarousel';
+import Testimonials from '../components/home/Testimonials';
 
 const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -163,6 +164,8 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
+      <Testimonials />
 
       {/* CTA Section */}
       <section className="py-16 bg-blue-600">
