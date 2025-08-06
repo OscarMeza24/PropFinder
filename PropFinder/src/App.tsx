@@ -19,6 +19,7 @@ import Analytics from './pages/Analytics';
 import Notifications from './pages/Notifications';
 import CreateProperty from './pages/CreateProperty';
 import AgentDashboard from './pages/AgentDashboard';
+import Dashboard from './pages/Dashboard';
 import FavoritesPage from './pages/FavoritesPage';
 import VerifyEmail from './pages/VerifyEmail';
 
@@ -41,6 +42,7 @@ function App() {
                     
                     <Route path="/favorites" element={<FavoritesPage />} />
                     <Route path="/agent/dashboard" element={<AgentDashboard />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/chat" element={<Chat />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
