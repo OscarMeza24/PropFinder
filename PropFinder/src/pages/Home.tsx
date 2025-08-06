@@ -8,7 +8,8 @@ import Testimonials from '../components/home/Testimonials';
 const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-  const { featuredProperties } = useProperty();
+  const { properties } = useProperty();
+  const featuredProperties = properties.slice(0, 8);
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
