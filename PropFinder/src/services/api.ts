@@ -39,6 +39,8 @@ export interface Property {
   city: string;
   state: string;
   zip_code?: string;
+  latitude?: number;
+  longitude?: number;
   bedrooms?: number;
   bathrooms?: number;
   square_feet?: number;
@@ -58,6 +60,7 @@ export interface Property {
   views?: number;
   contacts?: number;
   pendingVisits?: number;
+  featured?: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -5,7 +5,7 @@ export interface Property {
   id: string;
   title: string;
   price: number;
-  type: "apartment" | "house" | "condo" | "townhouse";
+  type: 'house' | 'apartment' | 'condo' | 'townhouse' | 'land' | 'commercial';
   bedrooms: number;
   bathrooms: number;
   area: number;
@@ -19,7 +19,8 @@ export interface Property {
   };
   images: string[];
   description: string;
-  amenities: string[];
+  features: string[]; // Changed from amenities to match API
+  amenities: string[]; // Keeping for backward compatibility
   agent: {
     id: string;
     name: string;
@@ -27,13 +28,23 @@ export interface Property {
     phone: string;
     avatar?: string;
   };
-  featured: boolean;
+  featured?: boolean;
   status?: "active" | "pending" | "sold" | "rented" | "deleted";
   views?: number;
   contacts?: number;
   pendingVisits?: number;
   createdAt: string;
   updatedAt: string;
+  // Additional fields from the API
+  property_type?: string;
+  square_feet?: number;
+  zip_code?: string;
+  agent_id?: string | number;
+  agent_name?: string;
+  agent_email?: string;
+  agent_phone?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface PropertyContextType {

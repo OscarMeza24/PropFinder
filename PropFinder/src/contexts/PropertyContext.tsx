@@ -6,41 +6,80 @@ import apiService, {
 import { Property, PropertyContext } from "./property-context-utils";
 
 // Función para convertir Property del API a Property del frontend
-const convertApiPropertyToProperty = (apiProperty: ApiProperty): Property => {
-  return {
-    id: apiProperty.id.toString(),
-    title: apiProperty.title,
-    price: typeof apiProperty.price === 'string' ? parseFloat(apiProperty.price) : apiProperty.price,
-    type: apiProperty.property_type as
-      | "apartment"
-      | "house"
-      | "condo"
-      | "townhouse",
-    bedrooms: apiProperty.bedrooms || 0,
-    bathrooms: apiProperty.bathrooms || 0,
-    area: apiProperty.square_feet || 0,
-    location: {
-      address: apiProperty.address,
-      city: apiProperty.city,
-      state: apiProperty.state,
-      zipCode: apiProperty.zip_code || "",
-      lat: undefined, // TODO: Implementar cuando se añadan coordenadas
-      lng: undefined,
-    },
-    images: apiProperty.images || [],
-    description: apiProperty.description || "",
-    amenities: apiProperty.features || [],
-    agent: {
-      id: apiProperty.agent_id.toString(),
-      name: apiProperty.agent_name || "Agente",
-      email: apiProperty.agent_email || "",
-      phone: apiProperty.agent_phone || "",
-      avatar: undefined,
-    },
-    featured: false, // TODO: Implementar cuando se añada campo featured
-    createdAt: apiProperty.created_at,
-    updatedAt: apiProperty.updated_at,
-  };
+  const convertApiPropertyToProperty = (apiProperty: ApiProperty): Property => {
+    // Asegurarse de que las imágenes sean un array válido
+    let images: string[] = [];
+    if (Array.isArray(apiProperty.images)) {
+      images = apiProperty.images;
+    } else if (typeof apiProperty.images === 'string') {
+      try {
+        // Intentar parsear si es un string JSON
+        images = JSON.parse(apiProperty.images);
+      } catch (e) {
+        // Si no se puede parsear, usar un array vacío
+        images = [];
+      }
+    }
+
+    // Asegurarse de que features sea un array
+    let features: string[] = [];
+    if (Array.isArray(apiProperty.features)) {
+      features = apiProperty.features;
+    } else if (apiProperty.features && typeof apiProperty.features === 'string') {
+      try {
+        features = JSON.parse(apiProperty.features);
+      } catch (e) {
+        features = [];
+      }
+    }
+
+    // Crear el objeto de propiedad
+    const property: Property = {
+      id: apiProperty.id.toString(),
+      title: apiProperty.title || 'Sin título',
+      price: typeof apiProperty.price === 'string' 
+        ? parseFloat(apiProperty.price) 
+        : apiProperty.price || 0,
+      type: apiProperty.property_type || 'house',
+      bedrooms: apiProperty.bedrooms ? Number(apiProperty.bedrooms) : 0,
+      bathrooms: apiProperty.bathrooms ? Number(apiProperty.bathrooms) : 0,
+      area: apiProperty.square_feet ? Number(apiProperty.square_feet) : 0,
+      location: {
+        address: apiProperty.address || 'Dirección no especificada',
+        city: apiProperty.city || 'Ciudad no especificada',
+        state: apiProperty.state || '',
+        zipCode: apiProperty.zip_code || "",
+        lat: apiProperty.latitude ? Number(apiProperty.latitude) : undefined,
+        lng: apiProperty.longitude ? Number(apiProperty.longitude) : undefined,
+      },
+      images: images,
+      description: apiProperty.description || "",
+      features: features, // Usar el campo features para compatibilidad con la API
+      amenities: features, // Mantener por compatibilidad con el código existente
+      agent: {
+        id: apiProperty.agent_id ? apiProperty.agent_id.toString() : '0',
+        name: apiProperty.agent_name || "Agente no especificado",
+        email: apiProperty.agent_email || "",
+        phone: apiProperty.agent_phone || "",
+        avatar: undefined,
+      },
+      featured: apiProperty.featured || false,
+      status: apiProperty.status as any, // Usar aserción de tipo
+      createdAt: apiProperty.created_at || new Date().toISOString(),
+      updatedAt: apiProperty.updated_at || new Date().toISOString(),
+      // Incluir campos adicionales del API
+      property_type: apiProperty.property_type,
+      square_feet: apiProperty.square_feet ? Number(apiProperty.square_feet) : undefined,
+      zip_code: apiProperty.zip_code,
+      agent_id: apiProperty.agent_id,
+      agent_name: apiProperty.agent_name,
+      agent_email: apiProperty.agent_email,
+      agent_phone: apiProperty.agent_phone,
+      latitude: apiProperty.latitude ? Number(apiProperty.latitude) : undefined,
+      longitude: apiProperty.longitude ? Number(apiProperty.longitude) : undefined,
+    };
+
+    return property;
 };
 
 export const useProperty = () => {
@@ -285,6 +324,7 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({
         },
         images: propertyData.images || [],
         description: propertyData.description || "",
+        features: propertyData.features || [],
         amenities: propertyData.features || [],
         agent: {
           id: "temp-agent",
