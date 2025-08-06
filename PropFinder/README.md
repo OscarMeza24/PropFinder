@@ -7,13 +7,21 @@ PropFinder es una plataforma inmobiliaria moderna y completa construida con Reac
 ### 👥 Para Usuarios
 
 - **🔍 Búsqueda Avanzada**: Filtros por precio, ubicación, habitaciones, tipo de propiedad y más
-- **🗺️ Mapas Interactivos**: Visualización de propiedades en mapas con Mapbox GL
+- **� Búsqueda con Geolocalización**: Búsqueda por proximidad usando GPS del usuario
+- **�🗺️ Mapas Interactivos**: Visualización de propiedades en mapas con Mapbox GL
+  - Marcadores de propiedades con precios
+  - Vista de mapa en página de detalles de propiedad
+  - Centrado automático en propiedad seleccionada
+  - Controles de navegación y geolocalización
+- **🎯 Búsqueda por Distancia**: Filtro por radio de distancia desde ubicación actual
+- **📱 Detección de Ubicación**: Búsqueda automática por coordenadas GPS
 - **❤️ Favoritos**: Guardar y gestionar propiedades de interés
 - **💬 Chat en Tiempo Real**: Comunicación directa con agentes inmobiliarios
 - **📅 Programar Visitas**: Agendar visitas a propiedades
 - **📱 Diseño Responsive**: Experiencia óptima en todos los dispositivos
 - **🔔 Notificaciones**: Sistema de notificaciones en tiempo real
 - **📧 Verificación de Email**: Proceso de verificación seguro
+- **🔍 Filtros Avanzados**: Sistema completo de filtrado con opciones expandibles
 
 ### 🏢 Para Agentes Inmobiliarios
 
@@ -46,9 +54,11 @@ PropFinder es una plataforma inmobiliaria moderna y completa construida con Reac
 - **React Hook Form** con validación Zod
 - **Framer Motion** para animaciones fluidas
 - **Socket.io Client** para comunicación en tiempo real
-- **Mapbox GL** para mapas interactivos
+- **Mapbox GL JS** y **React Map GL** para mapas interactivos y geolocalización
 - **React Dropzone** para subida de archivos
 - **Recharts** para gráficos y analytics
+- **Geolocation API** para búsqueda por proximidad
+- **LocalStorage** para persistencia de favoritos y preferencias
 
 ### Backend
 
@@ -185,10 +195,24 @@ PropFinder es una plataforma inmobiliaria moderna y completa construida con Reac
 PropFinder/
 ├── 📂 src/                    # Frontend React + TypeScript
 │   ├── 📂 components/         # Componentes reutilizables
+│   │   ├── 📂 ui/            # Componentes de interfaz
+│   │   │   ├── PropertyMap.tsx         # Mapa interactivo con Mapbox
+│   │   │   ├── AdvancedSearch.tsx      # Búsqueda avanzada con geolocalización
+│   │   │   └── ErrorBoundary.tsx       # Manejo de errores
+│   │   ├── 📂 layout/        # Componentes de layout
+│   │   │   └── Navbar.tsx             # Barra de navegación optimizada
+│   │   └── 📂 skeletons/     # Componentes de carga
 │   ├── 📂 pages/             # Páginas de la aplicación
+│   │   ├── Properties.tsx             # Lista de propiedades con filtros
+│   │   ├── PropertyDetail.tsx         # Detalles con mapa interactivo
+│   │   └── FavoritesPage.tsx          # Gestión de favoritos
 │   ├── 📂 contexts/          # Context API para estado global
 │   ├── 📂 hooks/             # Custom hooks
+│   │   └── useGeolocation.ts          # Hook para geolocalización y distancias
 │   ├── 📂 services/          # APIs y servicios
+│   ├── 📂 utils/             # Utilidades
+│   │   ├── imageUtils.ts              # Validación y manejo de imágenes
+│   │   └── cn.ts                      # Utilidades de clases CSS
 │   └── 📂 types/             # Definiciones de TypeScript
 ├── 📂 backend/               # Backend Node.js + Express
 │   ├── 📂 routes/            # Rutas de la API
@@ -252,7 +276,25 @@ npm run type-check
 
 ### ✨ Mejoras Recientes
 
-#### 🆕 Sistema de Roles y Agentes
+#### 🆕 Búsqueda Avanzada y Mapas Interactivos
+- **🗺️ Mapas en Detalles de Propiedades**: Mapa interactivo en cada página de propiedad individual
+- **📍 Centrado Automático**: El mapa se centra automáticamente en la propiedad seleccionada
+- **🎯 Marcadores Inteligentes**: Marcadores que muestran precio y ubicación de propiedades
+- **🔍 Búsqueda Geolocalizada**: Filtrado de propiedades por distancia desde ubicación del usuario
+- **📱 Geolocation API**: Detección automática de ubicación del usuario
+- **📏 Cálculo de Distancias**: Algoritmo haversine para calcular distancias precisas
+- **🗺️ Mapbox Integration**: Integración completa con Mapbox GL JS para mapas profesionales
+- **🎛️ Filtros Mejorados**: Sistema de filtros expandible con múltiples criterios
+- **💾 Estabilidad de Estado**: Eliminación de bucles infinitos en componentes de búsqueda
+- **🔧 Manejo de Errores**: Validación robusta de URLs de imágenes y datos
+
+#### 🔧 Optimizaciones Técnicas y Fixes
+- **⚡ Eliminación de Bucles Infinitos**: Solución definitiva a problemas de re-renderizado
+- **🔄 useCallback Optimization**: Optimización de funciones para evitar re-renderizados innecesarios
+- **🖼️ Manejo de Imágenes**: Sistema robusto para manejar URLs de imágenes inválidas o rotas
+- **📊 Filtrado Eficiente**: Sistema de filtrado interno sin dependencias externas problemáticas
+- **🧭 Navegación Estable**: Navbar completamente funcional sin conflictos de z-index
+- **🎨 UI/UX Mejorada**: Interfaz más limpia y responsiva con mejor experiencia de usuario
 - **👨‍💼 Separación Completa de Roles**: Sistema diferenciado entre usuarios y agentes inmobiliarios
 - **🔐 Registro por Rol**: Proceso de registro específico para usuarios y agentes con validaciones únicas
 - **📊 Dashboard de Agentes**: Panel exclusivo para agentes con métricas avanzadas y gestión de propiedades
@@ -260,37 +302,48 @@ npm run type-check
 - **🧭 Navegación Inteligente**: Redirección automática al dashboard correcto según el rol del usuario
 - **🛡️ Control de Acceso**: Protección de rutas y funcionalidades específicas por rol
 
-#### 🔌 WebSocket y Conectividad
+#### 🏠 Sistema de Roles y Agentes
 - **🚫 Eliminación de Bucles Infinitos**: Solución definitiva al problema de reconexiones por tokens expirados
 - **🔑 Validación de Tokens**: Sistema mejorado de verificación antes de establecer conexiones WebSocket
 - **📡 Manejo de Errores Específicos**: Códigos de error diferenciados para mejor debugging y UX
 - **🔄 Reconexión Inteligente**: Sistema que evita intentos de reconexión con credenciales inválidas
 - **📝 Logging Mejorado**: Mensajes de error más descriptivos para facilitar el desarrollo
 
-#### API y Backend
+#### 🔌 WebSocket y Conectividad
 - **🔄 Refactorización de recuperación de perfiles**: Optimización del sistema de perfiles de usuario
 - **🏠 Obtención pública de propiedades**: Nueva funcionalidad para acceder a propiedades sin autenticación
 - **💳 Métodos de pago unificados**: Integración mejorada de múltiples proveedores de pago
 - **💬 Conversaciones mejoradas**: Respuestas con estado de éxito opcional para mejor UX
 
-#### WebSocket y Chat
+#### 🛠️ API y Backend
 - **🔌 Manejo mejorado de Redis**: Optimización de conexiones y rendimiento
 - **🔐 Autenticación local**: Sistema de autenticación local para desarrollo
 - **📡 Servidor WebSocket simplificado**: Versión ligera para testing y debugging
 
-#### Scripts y Herramientas
+#### 💬 WebSocket y Chat
 - **🛠️ Scripts de verificación de BD**: Automatización para verificar tablas de chat y pagos
 - **👥 Script de verificación de usuarios**: Herramienta para testing de usuarios
 - **⚡ Scripts PowerShell mejorados**: Mejor experiencia de configuración e inicio
 
-#### Configuración y Build
+#### ⚙️ Scripts y Herramientas
 - **🎯 Proxy de servidor Vite**: Configuración optimizada para desarrollo
 - **🏗️ Optimizaciones de build**: Mejoras en el proceso de compilación
 - **🔧 Aliasing mejorado**: Mejor resolución de rutas en el proyecto
 
-## 📊 Funcionalidades Avanzadas
+#### � Configuración y Build
 
-### 🔐 Autenticación y Seguridad
+### �️ Sistema de Mapas y Geolocalización
+
+- **Mapas Interactivos**: Integración completa con Mapbox GL JS
+- **Marcadores de Propiedades**: Visualización de propiedades con precios y detalles
+- **Búsqueda Geolocalizada**: Filtrado por distancia desde ubicación del usuario
+- **Detección GPS**: Geolocation API para ubicación automática
+- **Mapas en Detalles**: Mapa específico para cada propiedad individual
+- **Controles Avanzados**: Navegación, zoom y geolocalización integrados
+- **Cálculo de Distancias**: Algoritmo haversine para precisión en distancias
+- **Popups Informativos**: Información detallada al hacer clic en marcadores
+- **Centrado Automático**: Vista automática en propiedades seleccionadas
+- **Manejo de Coordenadas**: Soporte para múltiples formatos de coordenadas
 
 - Registro y login con JWT
 - Verificación de email obligatoria
@@ -302,7 +355,7 @@ npm run type-check
 - Autenticación WebSocket con JWT
 - Scripts de verificación de usuarios para testing
 
-### 💬 Sistema de Chat
+### � Autenticación y Seguridad
 
 - Chat en tiempo real con WebSockets
 - Notificaciones push
