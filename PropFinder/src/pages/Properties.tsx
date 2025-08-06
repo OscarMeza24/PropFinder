@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, MapPin, Bed, Bath, Square, Heart, ArrowRight } from 'lucide-react';
 import { useProperty } from '../contexts/PropertyContext';
+import { useAuth } from '../contexts/auth-context-utils';
+import apiService from '../services/api';
 import PropertyCardSkeleton from '../components/skeletons/PropertyCardSkeleton';
 
 const Properties: React.FC = () => {
-  const { properties, searchProperties, isLoading } = useProperty();
+    const { properties, searchProperties, isLoading } = useProperty();
+      const { user } = useAuth();
+  const isAuthenticated = !!user;
+      const [favorites, setFavorites] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProperties, setFilteredProperties] = useState(properties);
   const [filters, setFilters] = useState({
@@ -16,7 +21,21 @@ const Properties: React.FC = () => {
     bathrooms: '',
     location: ''
   });
-  const [showFilters, setShowFilters] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (isAuthenticated && user) {
+        try {
+          const favoriteProperties = await apiService.getFavorites();
+                              setFavorites(favoriteProperties.map(p => String(p.id)));
+        } catch (error) {
+          console.error('Error fetching favorites:', error);
+        }
+      }
+    };
+    fetchFavorites();
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     let filtered = properties;
@@ -64,6 +83,26 @@ const Properties: React.FC = () => {
       ...prev,
       [key]: value
     }));
+  };
+
+          const toggleFavorite = async (propertyId: string) => {
+    if (!isAuthenticated) {
+      // Opcional: Redirigir a login o mostrar un mensaje
+      alert('Por favor, inicia sesión para añadir a favoritos');
+      return;
+    }
+
+    try {
+      if (favorites.includes(propertyId)) {
+                                await apiService.removeFavorite(parseInt(propertyId, 10));
+        setFavorites(prev => prev.filter(id => id !== propertyId));
+      } else {
+                                await apiService.addFavorite(parseInt(propertyId, 10));
+        setFavorites(prev => [...prev, propertyId]);
+      }
+    } catch (error) {
+      console.error('Error updating favorites:', error);
+    }
   };
 
   const clearFilters = () => {
@@ -270,8 +309,13 @@ const Properties: React.FC = () => {
                     alt={property.title}
                     className="w-full h-48 object-cover"
                   />
-                  <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors">
-                    <Heart className="h-5 w-5 text-gray-600" />
+                                    <button 
+                    onClick={() => toggleFavorite(property.id)}
+                    className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
+                  >
+                                        <Heart 
+                      className={`h-5 w-5 ${favorites.includes(property.id) ? 'text-red-500 fill-current' : 'text-gray-600'}`}
+                    />
                   </button>
                   {property.featured && (
                     <div className="absolute top-3 left-3 bg-blue-600 text-white px-2 py-1 rounded text-sm font-semibold">
