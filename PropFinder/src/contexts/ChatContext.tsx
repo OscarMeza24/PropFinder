@@ -59,13 +59,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
             prev.map((room) =>
               room.otherUserId === data.message.sender_id
                 ? {
-                    ...room,
-                    lastMessage: newMessage,
-                    unreadCount:
-                      room.otherUserId === activeRoom?.otherUserId
-                        ? 0
-                        : (room.unreadCount || 0) + 1,
-                  }
+                  ...room,
+                  lastMessage: newMessage,
+                  unreadCount:
+                    room.otherUserId === activeRoom?.otherUserId
+                      ? 0
+                      : (room.unreadCount || 0) + 1,
+                }
                 : room
             )
           );
@@ -141,14 +141,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
       ws.onclose = (event) => {
         console.log("WebSocket disconnected", event.code, event.reason);
         setIsConnected(false);
-        
+
         // Si el código es 4001, es un token expirado, no reconectarse inmediatamente
         if (event.code === 4001) {
           console.log("Token expirado, esperando nuevo login");
           setError("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
           return;
         }
-        
+
         // Para otros casos, intentar reconectar después de un retraso
         setTimeout(() => {
           if (user && apiService.isAuthenticated() && !apiService.isTokenExpired()) {
@@ -248,13 +248,35 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const joinRoom = useCallback(
-    async (otherUserId: number) => {
+    async (roomId: string | number) => {
+      // **INICIO DE LA MODIFICACIÓN**
+      // 1. Manejar el caso especial del Asistente Virtual
+      if (roomId === 'virtual-assistant') {
+        const virtualAssistantRoom: ChatRoom = {
+          id: 'virtual-assistant',
+          name: 'Asistente Virtual',
+          otherUserId: -1, // ID no válido para distinguirlo
+          lastMessage: null,
+          unreadCount: 0,
+        };
+        setActiveRoom(virtualAssistantRoom);
+        setMessages([]); // Limpiamos los mensajes de la sala anterior
+        return; // Salimos de la función para no ejecutar el código de abajo
+      }
+      // **FIN DE LA MODIFICACIÓN**
+
+      const otherUserId = Number(roomId);
+      if (isNaN(otherUserId)) {
+        console.error("ID de sala inválido:", roomId);
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       try {
         const room = chatRooms.find((r) => r.otherUserId === otherUserId);
         if (!room) {
-          throw new Error("Room not found");
+          throw new Error("Sala no encontrada");
         }
 
         setActiveRoom(room);
@@ -277,7 +299,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         await markAsRead(otherUserId);
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Error joining room";
+          error instanceof Error ? error.message : "Error al unirse a la sala";
         setError(errorMessage);
         throw error;
       } finally {
@@ -288,15 +310,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const sendMessage = useCallback(
-    async (content: string, receiverId: number) => {
+    async (content: string, receiverId: string | number) => { // Acepta string o number
       if (!user || wsRef.current?.readyState !== WebSocket.OPEN) {
-        throw new Error("No connection available");
+        throw new Error("No hay conexión disponible");
       }
 
       try {
         const messageData = {
           type: "send_message",
-          receiverId,
+          receiverId: Number(receiverId), // Aseguramos que sea un número para el backend
           content,
           messageType: "text" as const,
         };
@@ -317,7 +339,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         return optimisticMessage;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Error sending message";
+          error instanceof Error ? error.message : "Error al enviar el mensaje";
         setError(errorMessage);
         throw new Error(errorMessage);
       }
@@ -346,7 +368,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "Error creating conversation";
+            : "Error al crear la conversación";
         setError(errorMessage);
         throw new Error(errorMessage);
       } finally {
