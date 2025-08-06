@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Filter, MapPin, Bed, Bath, Square, Heart, ArrowRight } from 'lucide-react';
 import { useProperty } from '../contexts/PropertyContext';
+import PropertyCardSkeleton from '../components/skeletons/PropertyCardSkeleton';
 
 const Properties: React.FC = () => {
   const { properties, searchProperties, isLoading } = useProperty();
@@ -56,6 +57,8 @@ const Properties: React.FC = () => {
     setFilteredProperties(filtered);
   }, [searchQuery, filters, properties, searchProperties]);
 
+
+
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({
       ...prev,
@@ -86,8 +89,22 @@ const Properties: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 pt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          {/* Header Skeleton */}
+          <div className="mb-8 animate-pulse">
+            <div className="h-9 bg-gray-300 rounded w-1/3 mb-4"></div>
+            <div className="h-5 bg-gray-300 rounded w-1/4"></div>
+          </div>
+
+          {/* Filters Skeleton */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8 animate-pulse">
+             <div className="h-12 bg-gray-300 rounded-lg"></div>
+          </div>
+
+          {/* Property Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <PropertyCardSkeleton key={index} />
+            ))}
           </div>
         </div>
       </div>
