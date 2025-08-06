@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/auth-context-utils';
 import { useProperty } from '../contexts/PropertyContext';
-import { Upload, X, Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 interface PropertyFormData {
   title: string;
@@ -11,7 +11,7 @@ interface PropertyFormData {
   address: string;
   city: string;
   state: string;
-  zip_code?: string;
+  zip_code: string;
   bedrooms: number;
   bathrooms: number;
   square_feet: number;
@@ -44,21 +44,52 @@ const CreateProperty: React.FC = () => {
   });
 
   const [newFeature, setNewFeature] = useState('');
-  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newImage, setNewImage] = useState('');
 
-  // Verificar que el usuario es un agente
-  if (user?.role !== 'agent') {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-8">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Acceso Denegado</h1>
-            <p className="text-gray-600">Solo los agentes pueden crear propiedades.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'price' || name === 'bedrooms' || name === 'bathrooms' || name === 'square_feet'
+        ? Number(value) || 0
+        : value
+    }));
+  };
+
+  const addFeature = () => {
+    if (newFeature.trim() && !formData.features.includes(newFeature.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        features: [...prev.features, newFeature.trim()]
+      }));
+      setNewFeature('');
+    }
+  };
+
+  const removeFeature = (featureToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      features: prev.features.filter(feature => feature !== featureToRemove)
+    }));
+  };
+
+  const addImage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newImage.trim() && !formData.images.includes(newImage.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, newImage.trim()]
+      }));
+      setNewImage('');
+    }
+  };
+
+  const removeImage = (imageUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter(img => img !== imageUrl)
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,8 +115,17 @@ const CreateProperty: React.FC = () => {
       return;
     }
 
+    if (formData.images.length === 0) {
+      setError('Debes agregar al menos una imagen');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await createProperty(formData);
+      await createProperty({
+        ...formData,
+        property_type: formData.property_type
+      });
       navigate('/agent/dashboard');
     } catch (error) {
       console.error('Error creating property:', error);
@@ -95,39 +135,23 @@ const CreateProperty: React.FC = () => {
     }
   };
 
-  const addFeature = () => {
-    if (newFeature.trim() && !formData.features.includes(newFeature.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        features: [...prev.features, newFeature.trim()]
-      }));
-      setNewFeature('');
-    }
-  };
-
-  const removeFeature = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index)
-    }));
-  };
-
-  const addImage = () => {
-    if (newImageUrl.trim() && !formData.images.includes(newImageUrl.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, newImageUrl.trim()]
-      }));
-      setNewImageUrl('');
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
-  };
+  // Verificar si el usuario es un agente
+  if (user?.role !== 'agent') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Acceso no autorizado</h2>
+          <p className="text-gray-600 mb-6">Solo los agentes pueden crear propiedades.</p>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Volver al inicio
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-8">
@@ -358,7 +382,7 @@ const CreateProperty: React.FC = () => {
                   {feature}
                   <button
                     type="button"
-                    onClick={() => removeFeature(index)}
+                    onClick={() => removeFeature(feature)}
                     className="ml-2 text-blue-600 hover:text-blue-800"
                   >
                     <X className="h-4 w-4" />
@@ -376,25 +400,25 @@ const CreateProperty: React.FC = () => {
               <div className="flex space-x-2">
                 <input
                   type="url"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  value={newImage}
+                  onChange={(e) => setNewImage(e.target.value)}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="URL de la imagen..."
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage(e))}
                 />
                 <button
                   type="button"
-                  onClick={addImage}
+                  onClick={(e) => addImage(e)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  <Upload className="h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {formData.images.map((image, index) => (
-                <div key={index} className="relative">
+                <div key={index} className="relative group">
                   <img
                     src={image}
                     alt={`Imagen ${index + 1}`}
@@ -402,8 +426,11 @@ const CreateProperty: React.FC = () => {
                   />
                   <button
                     type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImage(image);
+                    }}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <X className="h-4 w-4" />
                   </button>
