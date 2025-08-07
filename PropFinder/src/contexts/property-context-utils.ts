@@ -68,6 +68,8 @@ interface PropertyContextType {
     property_type: string;
     images?: string[];
     features?: string[];
+    latitude?: number;
+    longitude?: number;
   }) => Promise<void>;
   updateProperty: (id: string, updates: Partial<Property>) => Promise<void>;
   deleteProperty: (id: string) => Promise<void>;

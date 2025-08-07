@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/auth-context-utils';
 import { useProperty } from '../contexts/PropertyContext';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, MapPin, Target } from 'lucide-react';
+import PropertyMap from '../components/ui/PropertyMap';
+import { useGeolocation } from '../hooks/useGeolocation';
 
 interface PropertyFormData {
   title: string;
@@ -18,14 +20,19 @@ interface PropertyFormData {
   property_type: 'house' | 'apartment' | 'condo' | 'townhouse' | 'land' | 'commercial';
   images: string[];
   features: string[];
+  latitude?: number;
+  longitude?: number;
 }
 
 const CreateProperty: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { createProperty } = useProperty();
+  const { getCoordinatesFromAddress } = useGeolocation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showMap, setShowMap] = useState(false);
+  const [isGeolocating, setIsGeolocating] = useState(false);
 
   const [formData, setFormData] = useState<PropertyFormData>({
     title: '',
@@ -41,20 +48,12 @@ const CreateProperty: React.FC = () => {
     property_type: 'house',
     images: [],
     features: [],
+    latitude: undefined,
+    longitude: undefined,
   });
 
   const [newFeature, setNewFeature] = useState('');
   const [newImage, setNewImage] = useState('');
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'price' || name === 'bedrooms' || name === 'bathrooms' || name === 'square_feet'
-        ? Number(value) || 0
-        : value
-    }));
-  };
 
   const addFeature = () => {
     if (newFeature.trim() && !formData.features.includes(newFeature.trim())) {
@@ -91,6 +90,160 @@ const CreateProperty: React.FC = () => {
     }));
   };
 
+  // Función para geocodificar la dirección automáticamente con mejoras
+  const handleGeocodeAddress = async () => {
+    if (!formData.address || !formData.city) {
+      setError('Completa al menos la dirección y la ciudad antes de geocodificar');
+      return;
+    }
+
+    setIsGeolocating(true);
+    setError('');
+    
+    try {
+      // Función para normalizar direcciones ecuatorianas
+      function normalizeEcuadorianAddress(address: string): string {
+        let normalized = address.toLowerCase().trim();
+        
+        // Expandir abreviaciones específicas de Ecuador
+        normalized = normalized.replace(/\bc\.\s*(\d+)/g, 'calle $1'); // C. 7 → calle 7
+        normalized = normalized.replace(/\bc(\d+)/g, 'calle $1'); // C7 → calle 7
+        normalized = normalized.replace(/\bclle\b/g, 'calle');
+        normalized = normalized.replace(/\bav\.\s*/g, 'avenida '); // Av. → avenida
+        normalized = normalized.replace(/\bavda\b/g, 'avenida');
+        
+        // Manejar nombres específicos de calles
+        normalized = normalized.replace(/24 de mayo/g, 'veinticuatro de mayo');
+        normalized = normalized.replace(/13 de abril/g, 'trece de abril');
+        normalized = normalized.replace(/4 de noviembre/g, 'cuatro de noviembre');
+        
+        // Normalizar conectores de intersección
+        normalized = normalized.replace(/\s+(y|esquina|con|intersección|entre)\s+/g, ' y ');
+        
+        return normalized.trim();
+      }
+      
+      const baseAddress = `${formData.address}, ${formData.city}`;
+      const normalized = normalizeEcuadorianAddress(baseAddress);
+      
+      // SOLO BUSCAR EN MANTA - Construir búsquedas que SIEMPRE incluyan Manta
+      const addressVariations = [];
+      
+      console.log(`🗺️ Geocodificando SOLO EN MANTA: "${formData.address}" en ${formData.city}`);
+      console.log(`🔄 Normalizada: "${normalized}"`);
+      
+      // Estrategia 1: Con Manta explícito desde el inicio
+      addressVariations.push(`${normalized} manta manabí ecuador`);
+      addressVariations.push(`${normalized} manta ecuador`);
+      addressVariations.push(`${formData.address} centro manta`);
+      
+      // Estrategia 2: Para intersecciones, formatos específicos CON MANTA
+      if (normalized.includes(' y ')) {
+        const parts = normalized.split(' y ');
+        if (parts.length === 2) {
+          const street1 = parts[0].trim();
+          const street2 = parts[1].trim();
+          
+          addressVariations.push(`${street1} esquina ${street2} manta`);
+          addressVariations.push(`${street1} con ${street2} manta manabí`);
+          addressVariations.push(`intersección ${street1} ${street2} manta`);
+        }
+      }
+      
+      // Estrategia 3: Para calles numéricas específicas de Manta
+      const streetNumberMatch = normalized.match(/calle (\d+)/);
+      if (streetNumberMatch) {
+        const streetNum = streetNumberMatch[1];
+        addressVariations.push(`c ${streetNum} manta manabí`);
+        addressVariations.push(`calle numero ${streetNum} manta`);
+      }
+      
+      // Remover duplicados manteniendo orden
+      const uniqueVariations = [...new Set(addressVariations)];
+      
+      console.log(`📋 Probando ${uniqueVariations.length} variaciones SOLO EN MANTA...`);
+      
+      let coords = null;
+      let successfulQuery = '';
+      
+      for (let i = 0; i < uniqueVariations.length; i++) {
+        const addressVariation = uniqueVariations[i];
+        console.log(`🔍 Intento ${i + 1}: "${addressVariation}"`);
+        
+        // Usar la función mejorada de geolocalización
+        coords = await getCoordinatesFromAddress(addressVariation);
+        
+        if (coords) {
+          // Verificar que las coordenadas estén realmente en Manta
+          const mantaLat = -0.9548;
+          const mantaLng = -80.7090;
+          const distance = Math.sqrt(
+            Math.pow(coords.lat - mantaLat, 2) + Math.pow(coords.lng - mantaLng, 2)
+          );
+          
+          // Solo aceptar coordenadas dentro de un radio de 30km de Manta
+          if (distance < 0.3) {
+            successfulQuery = addressVariation;
+            console.log(`✅ Éxito EN MANTA con: "${addressVariation}"`);
+            break;
+          } else {
+            console.log(`❌ Coordenadas fuera de Manta: ${coords.lat}, ${coords.lng}`);
+            coords = null; // Descartar resultado fuera de Manta
+          }
+        }
+      }
+      
+      if (coords) {
+        setFormData(prev => ({
+          ...prev,
+          latitude: coords.lat,
+          longitude: coords.lng
+        }));
+        setShowMap(true);
+        
+        // Mostrar mensaje de éxito con información detallada
+        const successMessage = coords.place_name 
+          ? `✅ Ubicación encontrada: ${coords.place_name}`
+          : `✅ Coordenadas obtenidas: ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`;
+        
+        console.log(successMessage);
+        console.log(`🎯 Query exitosa: "${successfulQuery}"`);
+        
+      } else {
+        setError(`❌ No se pudo geocodificar "${formData.address}, ${formData.city}". 
+                 Verifica la dirección o usa el mapa para seleccionar manualmente la ubicación.
+                 💡 Tip: Intenta con una dirección más específica como "calle 7 y avenida 24 de mayo"`);
+      }
+    } catch (error) {
+      console.error('❌ Error geocodificando:', error);
+      setError('Error al obtener coordenadas. Verifica tu conexión e intenta nuevamente.');
+    } finally {
+      setIsGeolocating(false);
+    }
+  };
+
+  // Función para manejar selección manual en el mapa
+  const handleMapLocationSelect = (lng: number, lat: number, placeName?: string) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat,
+      longitude: lng
+    }));
+    
+    if (placeName && !formData.address) {
+      // Si no hay dirección, intentar usar el nombre del lugar
+      const addressParts = placeName.split(', ');
+      if (addressParts.length >= 3) {
+        setFormData(prev => ({
+          ...prev,
+          address: addressParts[0] || '',
+          city: addressParts[1] || prev.city,
+          state: addressParts[2] || prev.state
+        }));
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -124,7 +277,9 @@ const CreateProperty: React.FC = () => {
     try {
       await createProperty({
         ...formData,
-        property_type: formData.property_type
+        property_type: formData.property_type,
+        latitude: formData.latitude,
+        longitude: formData.longitude
       });
       navigate('/agent/dashboard');
     } catch (error) {
@@ -136,6 +291,10 @@ const CreateProperty: React.FC = () => {
   };
 
   // Verificar si el usuario es un agente
+  console.log('🔍 Debug - User object:', user);
+  console.log('🔍 Debug - User role:', user?.role);
+  console.log('🔍 Debug - Is agent?:', user?.role === 'agent');
+  
   if (user?.role !== 'agent') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -251,9 +410,12 @@ const CreateProperty: React.FC = () => {
                   value={formData.address}
                   onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Calle 123 #45-67"
+                  placeholder="Ej: Calle 7 Avenida 11, Sector Centro, Av. 4 de Noviembre"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Ejemplos: "Calle 7 Avenida 11", "Av. 4 de Noviembre", "Malecón de Manta", "Sector Los Esteros"
+                </p>
               </div>
 
               <div>
@@ -265,7 +427,7 @@ const CreateProperty: React.FC = () => {
                   value={formData.city}
                   onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Bogotá"
+                  placeholder="Ej: Manta, Quito, Guayaquil"
                   required
                 />
               </div>
@@ -279,7 +441,7 @@ const CreateProperty: React.FC = () => {
                   value={formData.state}
                   onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Cundinamarca"
+                  placeholder="Ej: Manabí, Pichincha, Guayas"
                   required
                 />
               </div>
@@ -295,6 +457,98 @@ const CreateProperty: React.FC = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="110111"
                 />
+              </div>
+
+              {/* Botones de geocodificación */}
+              <div className="md:col-span-2 pt-4 border-t">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={handleGeocodeAddress}
+                    disabled={isGeolocating || !formData.address || !formData.city}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isGeolocating ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <Target className="h-4 w-4" />
+                    )}
+                    <span>Obtener Coordenadas</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowMap(!showMap)}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    <span>{showMap ? 'Ocultar Mapa' : 'Mostrar Mapa'}</span>
+                  </button>
+
+                  {formData.latitude && formData.longitude && (
+                    <div className="flex items-center space-x-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg">
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-sm">
+                        Coordenadas: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {showMap && (
+                  <div className="mt-4 rounded-lg overflow-hidden border border-gray-200" style={{ height: '400px' }}>
+                    <PropertyMap
+                      properties={formData.latitude && formData.longitude ? [{
+                        id: 'temp',
+                        title: formData.title || 'Nueva Propiedad',
+                        price: formData.price || 0,
+                        type: formData.property_type as any,
+                        bedrooms: formData.bedrooms,
+                        bathrooms: formData.bathrooms,
+                        area: formData.square_feet,
+                        location: {
+                          address: formData.address,
+                          city: formData.city,
+                          state: formData.state,
+                          zipCode: formData.zip_code,
+                          lat: formData.latitude,
+                          lng: formData.longitude
+                        },
+                        images: formData.images,
+                        description: formData.description,
+                        features: formData.features,
+                        amenities: formData.features,
+                        agent: {
+                          id: user?.id?.toString() || '',
+                          name: user?.name || '',
+                          email: user?.email || '',
+                          phone: user?.phone || ''
+                        },
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        latitude: formData.latitude,
+                        longitude: formData.longitude
+                      }] : []}
+                      onLocationSelect={handleMapLocationSelect}
+                      interactive={true}
+                      showSearch={true}
+                      isFullscreen={false}
+                      initialCenter={formData.latitude && formData.longitude ? {
+                        latitude: formData.latitude,
+                        longitude: formData.longitude,
+                        zoom: 18
+                      } : undefined}
+                    />
+                  </div>
+                )}
+
+                <p className="text-sm text-gray-500 mt-2">
+                  💡 <strong>Consejos para mejores resultados:</strong><br/>
+                  • Para intersecciones: "Calle 7 Avenida 11"<br/>
+                  • Para avenidas principales: "Av. 4 de Noviembre"<br/>
+                  • Para sectores: "Sector Los Esteros", "Urbanización El Bosque"<br/>
+                  • Si no encuentra la dirección exacta, selecciona manualmente en el mapa
+                </p>
               </div>
             </div>
           </div>

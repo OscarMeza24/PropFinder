@@ -1,26 +1,59 @@
 const { Pool } = require('pg');
 const redis = require('redis');
+const { URL } = require('url');
+const path = require('path');
+
+// Asegurar que dotenv esté cargado con ruta específica
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // Configurar PostgreSQL para Supabase
 const isProduction = process.env.NODE_ENV === 'production';
 
-const poolConfig = {
-  connectionString: process.env.DATABASE_URL,
-  // Aumentar timeouts para conexiones más estables
-  connectionTimeoutMillis: 10000, // 10 segundos
-  idleTimeoutMillis: 30000, // 30 segundos
-  // Habilitar keep-alive
-  keepAlive: true,
-  keepAliveInitialDelayMillis: 10000, // 10 segundos
+// Parsear URL de base de datos para evitar problemas con contraseñas especiales
+const createPoolConfig = () => {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL no está definida en las variables de entorno');
+  }
+
+  // Intentar crear pool con connectionString primero (más simple)
+  try {
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false, // Necesario para Supabase
+      },
+      // Aumentar timeouts para conexiones más estables
+      connectionTimeoutMillis: 10000, // 10 segundos
+      idleTimeoutMillis: 30000, // 30 segundos
+      // Habilitar keep-alive
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000, // 10 segundos
+    };
+  } catch (error) {
+    console.warn('⚠️  No se pudo usar connectionString, intentando parsear URL manualmente...');
+    
+    // Si falla, parsear URL manualmente
+    const dbUrl = new URL(process.env.DATABASE_URL);
+    return {
+      host: dbUrl.hostname,
+      port: dbUrl.port,
+      database: dbUrl.pathname.slice(1), // Remove leading /
+      user: dbUrl.username,
+      password: dbUrl.password,
+      ssl: {
+        rejectUnauthorized: false, // Necesario para Supabase
+      },
+      // Aumentar timeouts para conexiones más estables
+      connectionTimeoutMillis: 10000, // 10 segundos
+      idleTimeoutMillis: 30000, // 30 segundos
+      // Habilitar keep-alive
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000, // 10 segundos
+    };
+  }
 };
 
-if (isProduction) {
-  poolConfig.ssl = {
-    rejectUnauthorized: false, // Necesario para Supabase/producción
-  };
-}
-
-const pool = new Pool(poolConfig);
+const pool = new Pool(createPoolConfig());
 
 // Manejar errores de conexión
 pool.on('error', (err) => {

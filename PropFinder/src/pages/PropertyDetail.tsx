@@ -201,13 +201,26 @@ const PropertyDetail: React.FC = () => {
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Ubicación</h3>
               <div className="rounded-lg overflow-hidden" style={{ height: '400px' }}>
-                <PropertyMap
-                  properties={[property]}
-                  selectedProperty={property}
-                  interactive={true}
-                  showSearch={false}
-                  isFullscreen={false}
-                />
+                {(property.latitude && property.longitude) || (property.location.lat && property.location.lng) ? (
+                  <PropertyMap
+                    properties={[property]}
+                    selectedProperty={property}
+                    interactive={true}
+                    showSearch={false}
+                    isFullscreen={false}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-500">
+                    <MapPin className="h-12 w-12 mb-4" />
+                    <p className="text-lg font-medium mb-2">Ubicación aproximada</p>
+                    <p className="text-sm text-center px-4">
+                      Las coordenadas exactas no están disponibles, pero la propiedad se encuentra en:
+                    </p>
+                    <p className="text-sm font-medium mt-2 text-center">
+                      {property.location.city}, {property.location.state}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center text-gray-600">
@@ -216,6 +229,11 @@ const PropertyDetail: React.FC = () => {
                 </div>
                 {property.location.zipCode && (
                   <p className="text-sm text-gray-500 mt-1">Código postal: {property.location.zipCode}</p>
+                )}
+                {!(property.latitude && property.longitude) && !(property.location.lat && property.location.lng) && (
+                  <p className="text-xs text-yellow-600 mt-2 italic">
+                    📍 Las coordenadas exactas se actualizarán próximamente
+                  </p>
                 )}
               </div>
             </div>

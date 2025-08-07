@@ -22,6 +22,7 @@ import AgentDashboard from './pages/AgentDashboard';
 import Dashboard from './pages/Dashboard';
 import FavoritesPage from './pages/FavoritesPage';
 import VerifyEmail from './pages/VerifyEmail';
+import LocationTestPage from './pages/LocationTestPage';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
                     <Route path="/properties" element={<Properties />} />
                     <Route path="/properties/new" element={<CreateProperty />} />
                     <Route path="/properties/:id" element={<PropertyDetail />} />
+                    <Route path="/location-test" element={<LocationTestPage />} />
                     
                     <Route path="/favorites" element={<FavoritesPage />} />
                     <Route path="/agent/dashboard" element={<AgentDashboard />} />

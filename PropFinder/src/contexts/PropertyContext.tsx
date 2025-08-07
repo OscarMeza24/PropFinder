@@ -298,45 +298,32 @@ export const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({
     property_type: string;
     images?: string[];
     features?: string[];
+    latitude?: number;
+    longitude?: number;
   }): Promise<void> => {
     try {
       setIsLoading(true);
-      // TODO: Implement actual API call to create property
-      // This is a mock implementation that creates a temporary property
-      const tempId = Math.random().toString(36).substr(2, 9);
-      const newProperty: Property = {
-        id: tempId,
+      
+      // Usar el servicio de API real para crear la propiedad
+      const response = await apiService.createProperty({
         title: propertyData.title,
+        description: propertyData.description,
         price: propertyData.price,
-        type: propertyData.property_type as
-          | "apartment"
-          | "house"
-          | "condo"
-          | "townhouse",
-        bedrooms: propertyData.bedrooms || 0,
-        bathrooms: propertyData.bathrooms || 0,
-        area: propertyData.square_feet || 0,
-        location: {
-          address: propertyData.address,
-          city: propertyData.city,
-          state: propertyData.state,
-          zipCode: propertyData.zip_code || "",
-        },
-        images: propertyData.images || [],
-        description: propertyData.description || "",
-        features: propertyData.features || [],
-        amenities: propertyData.features || [],
-        agent: {
-          id: "temp-agent",
-          name: "Current User",
-          email: "",
-          phone: "",
-        },
-        featured: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
+        address: propertyData.address,
+        city: propertyData.city,
+        state: propertyData.state,
+        zip_code: propertyData.zip_code,
+        bedrooms: propertyData.bedrooms,
+        bathrooms: propertyData.bathrooms,
+        square_feet: propertyData.square_feet,
+        property_type: propertyData.property_type,
+        images: propertyData.images,
+        features: propertyData.features,
+        latitude: propertyData.latitude,
+        longitude: propertyData.longitude
+      });
+      
+      const newProperty = convertApiPropertyToProperty(response.property);
       setProperties((prev) => [newProperty, ...prev]);
     } catch (err) {
       const errorMessage =

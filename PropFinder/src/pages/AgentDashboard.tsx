@@ -28,7 +28,7 @@ interface AgentStats {
 
 const AgentDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { properties } = useProperty();
+  const [agentProperties, setAgentProperties] = useState<any[]>([]);
   const [stats, setStats] = useState<AgentStats>({
     totalProperties: 0,
     activeProperties: 0,
@@ -38,10 +38,33 @@ const AgentDashboard: React.FC = () => {
     pendingVisits: 0,
   });
 
-  // Filtrar propiedades del agente actual
-  const agentProperties = properties.filter(
-    property => property.agent?.id === user?.id?.toString()
-  );
+  // Obtener propiedades del agente
+  useEffect(() => {
+    const fetchAgentProperties = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const response = await fetch('http://localhost:5000/api/properties/agent/my-properties', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('🏠 Agent properties data:', data);
+          setAgentProperties(data.properties || []);
+        } else {
+          console.error('Failed to fetch agent properties:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching agent properties:', error);
+      }
+    };
+
+    fetchAgentProperties();
+  }, [user?.id]);
 
   useEffect(() => {
     // Calcular estadísticas del agente
@@ -56,6 +79,10 @@ const AgentDashboard: React.FC = () => {
       pendingVisits: agentProperties.reduce((sum, p) => sum + (p.pendingVisits || 0), 0),
     });
   }, [agentProperties]);
+
+  console.log('🔍 AgentDashboard - User object:', user);
+  console.log('🔍 AgentDashboard - User role:', user?.role);
+  console.log('🔍 AgentDashboard - Is agent?:', user?.role === 'agent');
 
   if (user?.role !== 'agent') {
     return (

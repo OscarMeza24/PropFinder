@@ -22,9 +22,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Verificar token al cargar
     const checkAuth = async () => {
       try {
+        console.log('🔍 AuthContext - Checking auth...');
+        console.log('🔍 AuthContext - Is authenticated?', apiService.isAuthenticated());
+        
         if (apiService.isAuthenticated()) {
           const { user } = await apiService.getProfile();
+          console.log('🔍 AuthContext - checkAuth user:', user);
+          console.log('🔍 AuthContext - checkAuth user role:', user?.role);
           setUser(user);
+        } else {
+          console.log('🔍 AuthContext - No token found, user not authenticated');
         }
       } catch (error) {
         console.error("Error checking auth:", error);
@@ -42,6 +49,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setError(null);
     try {
       const response = await apiService.login({ email, password });
+      console.log('🔍 AuthContext - Login response:', response);
+      console.log('🔍 AuthContext - User from response:', response.user);
+      console.log('🔍 AuthContext - User role:', response.user?.role);
       setUser(response.user);
     } catch (error) {
       const errorMessage =

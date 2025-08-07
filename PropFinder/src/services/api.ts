@@ -252,8 +252,7 @@ class ApiService {
   }
 
   async getProfile(): Promise<{ user: User }> {
-    const userData = await this.request<User>("/auth/profile");
-    return { user: userData };
+    return this.request<{ user: User }>("/auth/profile");
   }
 
   async updateProfile(data: {
@@ -334,6 +333,8 @@ class ApiService {
     property_type: string;
     images?: string[];
     features?: string[];
+    latitude?: number;
+    longitude?: number;
   }): Promise<{ message: string; property: Property }> {
     return this.request<{ message: string; property: Property }>(
       "/properties",
