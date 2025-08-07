@@ -10,14 +10,69 @@ const getBotResponse = (userInput: string): Message => {
   const lowerInput = userInput.toLowerCase();
   let responseContent = "No he entendido tu pregunta. Un agente se pondrá en contacto contigo para ayudarte.";
 
+  // Saludos y conversación casual
   if (lowerInput.includes('hola') || lowerInput.includes('buenos dias') || lowerInput.includes('buenas tardes')) {
     responseContent = '¡Hola! Bienvenido a PropFinder. ¿En qué puedo ayudarte hoy?';
+  } else if (lowerInput.includes('cómo estás')) {
+    responseContent = '¡Muy bien, gracias por preguntar! Listo para ayudarte a encontrar la propiedad de tus sueños.';
+  } else if (lowerInput.includes('ayuda')) {
+    responseContent = '¡Claro! Estoy aquí para ayudarte. Dime qué necesitas, por ejemplo: "buscar una casa", "vender mi propiedad" o "hablar con un agente".';
+  
+  // Búsqueda y detalles de propiedades
+  } else if (lowerInput.includes('buscar') || lowerInput.includes('encontrar')) {
+    responseContent = '¡Por supuesto! Puedo ayudarte. ¿Qué tipo de propiedad te interesa? (casa, departamento, etc.). También puedes ir a nuestra sección de propiedades para ver todas las opciones.';
+  } else if (lowerInput.includes('cuántas') && (lowerInput.includes('casas') || lowerInput.includes('propiedades'))) {
+    responseContent = 'Tenemos una gran variedad de propiedades. Para ver el catálogo completo y actualizado, te invito a visitar nuestra página de propiedades y usar los filtros.';
+  } else if (lowerInput.includes('habitaciones') || lowerInput.includes('cuartos') || lowerInput.includes('recámaras')) {
+    responseContent = 'Puedes filtrar las propiedades por número de habitaciones en nuestro buscador. ¿Buscas alguna cantidad en específico?';
+  } else if (lowerInput.includes('baños')) {
+    responseContent = 'El número de baños se especifica en los detalles de cada propiedad. Puedes usar los filtros de búsqueda para encontrar lo que necesitas.';
+  } else if (lowerInput.includes('garage') || lowerInput.includes('cochera') || lowerInput.includes('estacionamiento')) {
+    responseContent = '¿Necesitas estacionamiento? Muchas de nuestras propiedades lo incluyen. Puedes confirmarlo en los detalles de cada una o usando los filtros de búsqueda.';
+  } else if (lowerInput.includes('piscina') || lowerInput.includes('alberca')) {
+    responseContent = '¡Una piscina suena genial! Para ver las propiedades que cuentan con una, solo tienes que seleccionar el filtro "piscina" en nuestra página de búsqueda.';
+  } else if (lowerInput.includes('jardín') || lowerInput.includes('patio')) {
+    responseContent = 'Tenemos propiedades con hermosos jardines y patios. Utiliza el filtro "jardín" en la búsqueda para encontrarlas fácilmente.';
+
+  // Precios y financiamiento
+  } else if (lowerInput.includes('precio') || lowerInput.includes('precios') || lowerInput.includes('costo')) {
+    responseContent = 'Los precios varían mucho. Te recomiendo visitar nuestra sección de propiedades, donde podrás ver los precios y filtrar por tu presupuesto.';
+  } else if (lowerInput.includes('requisitos') || lowerInput.includes('crédito') || lowerInput.includes('financiamiento')) {
+    responseContent = 'Ofrecemos asesoría sobre créditos y financiamiento. Los requisitos pueden variar. ¿Te gustaría que un agente especializado te contacte para darte más detalles?';
+  } else if (lowerInput.includes('planes de pago') || lowerInput.includes('enganche') || lowerInput.includes('mensualidades')) {
+    responseContent = 'Entendemos que los planes de pago son clave. Nuestros agentes pueden crear un plan personalizado para ti, detallando el enganche y las mensualidades. ¿Te gustaría que uno te contacte para darte toda la información?';
+
+  // Proceso y servicios
+  } else if (lowerInput.includes('servicios adicionales') || lowerInput.includes('asesoría legal') || lowerInput.includes('mudanza')) {
+    responseContent = 'Además de ayudarte a encontrar tu propiedad, te conectamos con servicios de confianza como asesoría legal, empresas de mudanza y profesionales de remodelación. ¿Te interesa alguno en particular?';
+  } else if (lowerInput.includes('vender') || lowerInput.includes('venda mi propiedad')) {
+    responseContent = '¡Claro que podemos ayudarte a vender tu propiedad! Por favor, visita nuestra sección "Vende con nosotros" o déjanos tus datos para que un agente te contacte.';
+  } else if (lowerInput.includes('rentar') || lowerInput.includes('alquilar')) {
+    responseContent = 'También tenemos un amplio catálogo de propiedades en renta. En la página de búsqueda, solo tienes que seleccionar "Renta" como tipo de operación.';
+  } else if (lowerInput.includes('cita') || lowerInput.includes('visitar') || lowerInput.includes('ver una propiedad')) {
+    responseContent = 'Para agendar una visita, ve a la página de la propiedad que te interesa y haz clic en "Agendar Visita". O si prefieres, dime qué propiedad te gustaría conocer.';
+  } else if (lowerInput.includes('agente') || lowerInput.includes('asesor')) {
+    responseContent = 'Nuestros agentes están listos para ayudarte. ¿Quieres que te ponga en contacto con uno o tienes una pregunta general?';
+
+  // Información de la empresa
+  } else if (lowerInput.includes('quiénes son') || lowerInput.includes('empresa')) {
+    responseContent = 'Somos PropFinder, una plataforma inmobiliaria que facilita la compra, venta y renta de propiedades. ¡Nuestra misión es ayudarte a encontrar tu lugar ideal!';
+  } else if (lowerInput.includes('contacto') || lowerInput.includes('teléfono') || lowerInput.includes('email')) {
+    responseContent = 'Puedes contactarnos al (55) 1234-5678 o por email a contacto@propfinder.com. También puedes hablar con un agente directamente desde este chat.';
   } else if (lowerInput.includes('horario')) {
     responseContent = 'Nuestros horarios de atención son de lunes a viernes, de 9:00 a.m. a 6:00 p.m., y los sábados de 10:00 a.m. a 2:00 p.m.';
+  } else if (lowerInput.includes('oficina') || lowerInput.includes('ubicación')) {
+    responseContent = 'Nuestra oficina principal está en Av. Reforma 123, Ciudad de México. ¡Será un placer atenderte!';
+
+  // Tipo de propiedad (genérico)
   } else if (lowerInput.includes('tipo') || lowerInput.includes('propiedades')) {
-    responseContent = 'Manejamos una amplia variedad de propiedades, incluyendo casas, departamentos, terrenos y locales comerciales. ¿Hay algo en específico que estés buscando?';
+    responseContent = 'Manejamos casas, departamentos, terrenos y locales comerciales. ¿Hay algo en específico que te interese?';
+
+  // Despedidas
   } else if (lowerInput.includes('gracias')) {
     responseContent = '¡De nada! Ha sido un placer ayudarte. Si tienes más preguntas, no dudes en consultarme.';
+  } else if (lowerInput.includes('adios') || lowerInput.includes('hasta luego')) {
+    responseContent = '¡Hasta pronto! Gracias por usar PropFinder.';
   }
 
   return {
